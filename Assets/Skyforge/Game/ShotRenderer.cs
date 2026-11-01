@@ -14,6 +14,7 @@ namespace Skyforge.Game
         const float PlayY = -0.13f;
 
         readonly InstancedBatch _pulse, _orb, _orbRim, _dart, _dartRim, _credit, _repair;
+        readonly InstancedBatch _pellet, _lance, _missile, _micro, _missileTail, _disc;
         readonly List<Mesh> _meshes = new List<Mesh>();
 
         public ShotRenderer()
@@ -32,6 +33,13 @@ namespace Skyforge.Game
             _dartRim = new InstancedBatch(dartRim, Mats.BulletRim);
             _credit = new InstancedBatch(shard, Mats.Credit);
             _repair = new InstancedBatch(orbBig, Mats.Repair);
+
+            _pellet = new InstancedBatch(Diamond(new Vector3(0.11f, 0.08f, 0.16f), "Pellet"), Mats.PlayerShot);
+            _lance = new InstancedBatch(Diamond(new Vector3(0.14f, 0.08f, 0.85f), "LanceBolt"), Mats.PlayerShot);
+            _missile = new InstancedBatch(Diamond(new Vector3(0.09f, 0.09f, 0.34f), "Missile"), Mats.HullLight);
+            _micro = new InstancedBatch(Diamond(new Vector3(0.06f, 0.06f, 0.22f), "MicroMissile"), Mats.HullLight);
+            _missileTail = new InstancedBatch(Diamond(new Vector3(0.07f, 0.07f, 0.16f), "MissileTail"), Mats.PlayerGlow);
+            _disc = new InstancedBatch(Diamond(new Vector3(0.36f, 0.05f, 0.36f), "Disc"), Mats.PlayerShot);
         }
 
         Mesh Diamond(Vector3 r, string name)
@@ -49,15 +57,33 @@ namespace Skyforge.Game
         /// </summary>
         public void Draw(StageSim sim, float behind, float time)
         {
-            _pulse.Clear();
+            _pulse.Clear(); _pellet.Clear(); _lance.Clear(); _missile.Clear(); _micro.Clear(); _missileTail.Clear(); _disc.Clear();
             var rot = Quaternion.identity;
             var one = Vector3.one;
             foreach (var s in sim.Shots)
             {
                 var p = s.Pos - s.Vel * behind;
-                _pulse.Add(new Vector3(p.X, PlayY, p.Y), rot, one);
+                var pos = new Vector3(p.X, PlayY, p.Y);
+                var along = s.Vel.LengthSq > 0.01f ? Quaternion.LookRotation(new Vector3(s.Vel.X, 0f, s.Vel.Y)) : rot;
+                switch (s.Visual)
+                {
+                    case ShotVisual.Pellet: _pellet.Add(pos, along, one); break;
+                    case ShotVisual.LanceBolt: _lance.Add(pos, along, one * (s.Radius / 0.22f)); break;
+                    case ShotVisual.Missile:
+                    case ShotVisual.MicroMissile:
+                    {
+                        bool micro = s.Visual == ShotVisual.MicroMissile;
+                        (micro ? _micro : _missile).Add(pos, along, one);
+                        var back = along * Vector3.back * (micro ? 0.25f : 0.38f);
+                        float flicker = 0.8f + 0.4f * Mathf.PerlinNoise(time * 25f, s.Pos.X * 3f);
+                        _missileTail.Add(pos + back, along, new Vector3(1f, 1f, flicker) * (micro ? 0.7f : 1f));
+                        break;
+                    }
+                    case ShotVisual.Disc: _disc.Add(pos, Quaternion.Euler(0f, time * 900f, 0f), one); break;
+                    default: _pulse.Add(pos, rot, one); break;
+                }
             }
-            _pulse.Draw();
+            _pulse.Draw(); _pellet.Draw(); _lance.Draw(); _missile.Draw(); _micro.Draw(); _missileTail.Draw(); _disc.Draw();
 
             _orb.Clear(); _orbRim.Clear(); _dart.Clear(); _dartRim.Clear();
             foreach (var s in sim.EnemyShots)

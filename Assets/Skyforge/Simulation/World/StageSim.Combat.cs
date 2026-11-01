@@ -74,9 +74,10 @@ namespace Skyforge.Simulation
             for (int i = 0; i < EnemyShots.Count; i++)
             {
                 var s = EnemyShots[i];
-                s.Pos += s.Vel * Field.Dt;
+                float slow = AegisUp && Vec2.DistanceSq(s.Pos, Player.Pos) < CoreStats.Range * CoreStats.Range ? CoreStats.Factor : 1f;
+                s.Pos += s.Vel * (Field.Dt * slow);
                 if (Field.IsOutside(s.Pos, 1f)) continue;
-                if (Player.Alive && Player.Invulnerable <= 0f)
+                if (Player.Alive && (Player.Invulnerable <= 0f || AegisUp))
                 {
                     float r = s.Radius + PlayerShip.HitRadius;
                     if (Vec2.DistanceSq(s.Pos, Player.Pos) <= r * r)
@@ -110,7 +111,14 @@ namespace Skyforge.Simulation
         bool HurtPlayer(float damage)
         {
             var p = Player;
-            if (!p.Alive || p.Invulnerable > 0f || damage <= 0f) return false;
+            if (!p.Alive || damage <= 0f) return false;
+            if (AegisUp)
+            {
+                // The bubble absorbs it: the bullet is used up, nothing else happens.
+                Events.Add(new SimEvent { Type = SimEventType.AegisBlock, Pos = p.Pos });
+                return true;
+            }
+            if (p.Invulnerable > 0f) return false;
             p.Invulnerable = PlayerShip.HitInvulnerability;
             p.ShieldRegenWait = p.ShieldRegenDelay;
             float absorbed = Math.Min(p.Shield, damage);

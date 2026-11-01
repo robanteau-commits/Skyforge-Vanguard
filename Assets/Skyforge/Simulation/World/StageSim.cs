@@ -11,6 +11,8 @@ namespace Skyforge.Simulation
         public StageDef Stage;
         /// <summary>Spawn unarmed target drones. Defaults to on when there's no stage.</summary>
         public bool? PracticeDrones;
+        /// <summary>Speeds up the core's charging (the hangar preview uses it so the core fires often).</summary>
+        public float CoreChargeMultiplier = 1f;
     }
 
     /// <summary>
@@ -93,6 +95,11 @@ namespace Skyforge.Simulation
                 MovePlayer(input);
                 FireWings();
             }
+            else
+            {
+                Player.BeamOn[0] = Player.BeamOn[1] = false;
+            }
+            UpdateCore(input);
             UpdateDefences();
             if (Status == StageStatus.Playing) RunTimeline();
             if (_practice) UpdatePracticeDrones();
@@ -127,14 +134,15 @@ namespace Skyforge.Simulation
             return e;
         }
 
-        /// <summary>Damage an enemy; destroys it (with score, drops, effects) at 0 HP. True if it died.</summary>
-        bool DamageEnemy(Enemy e, float damage, Vec2 at)
+        /// <summary>Damage an enemy; destroys it (with score, drops, effects) at 0 HP. True if it died.
+        /// Continuous damage (beams) passes <paramref name="hitEvent"/> = false on most steps.</summary>
+        bool DamageEnemy(Enemy e, float damage, Vec2 at, bool hitEvent = true)
         {
             if (e.Dead) return false;
             e.Hp -= damage;
             if (e.Hp > 0f)
             {
-                Events.Add(new SimEvent { Type = SimEventType.Hit, Pos = at, EnemyKind = e.Kind, EnemyId = e.Id });
+                if (hitEvent) Events.Add(new SimEvent { Type = SimEventType.Hit, Pos = at, EnemyKind = e.Kind, EnemyId = e.Id });
                 return false;
             }
             Kill(e);
@@ -151,6 +159,7 @@ namespace Skyforge.Simulation
             _comboIdle = 0f;
             Events.Add(new SimEvent { Type = SimEventType.Destroyed, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id, Value = points });
             DropLoot(e);
+            ChargeCore(e.Kind == EnemyKind.Warden || e.Kind == EnemyKind.Bastion ? CoreChargePerBigKill : CoreChargePerKill);
             if (e.Kind == EnemyKind.SpineMine) MineBurst(e);
         }
 
@@ -179,8 +188,14 @@ namespace Skyforge.Simulation
             var p = Player;
             h.Add(p.Pos); h.Add(p.LeftCooldown); h.Add(p.RightCooldown); h.Add(p.Alive ? 1 : 0);
             h.Add(p.Hull); h.Add(p.Shield); h.Add(p.ShieldRegenWait); h.Add(p.Invulnerable);
+            h.Add(p.CoreCharge); h.Add(p.CoreActive ? 1 : 0); h.Add(p.CoreTimer); h.Add(p.WingmateCount);
+            for (int i = 0; i < 2; i++) { h.Add(p.BeamOn[i] ? 1 : 0); h.Add(p.BeamEndY[i]); h.Add(p.BeamTarget[i]); h.Add(p.BeamTime[i]); }
+            foreach (var c in p.WingmateCooldown) h.Add(c);
             h.Add(Shots.Count);
-            foreach (var s in Shots) { h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); }
+            foreach (var s in Shots)
+            {
+                h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); h.Add(s.Life); h.Add(s.HitsLeft); h.Add(s.LastHit); h.Add(s.TargetId);
+            }
             h.Add(EnemyShots.Count);
             foreach (var s in EnemyShots) { h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); }
             h.Add(Enemies.Count);

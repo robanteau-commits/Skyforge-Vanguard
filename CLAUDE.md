@@ -31,7 +31,8 @@ stages, enemies or art.
 
 ## Layout
 - `Simulation/World/StageSim*.cs` — one partial class split by topic: Player (movement), Weapons
-  (player fire), Enemies (per-kind behaviour, telegraphs, contact), Combat (enemy fire, shield/hull
+  (all 8 wing weapons: projectiles, homing, piercing, bouncing, blasts, the beam, chain lightning),
+  Core (charge and the 4 core specials), Enemies (per-kind behaviour, telegraphs, contact), Combat (enemy fire, shield/hull
   damage, pickups), Timeline (spawning, cleared/failed), Practice (target drones).
   `Field` = the 18 × 32 play field (X right, Y up the screen). `Simulation/Content/` — weapons
   (`Weapons.cs`), enemy stats (`Enemies.cs`, `EnemyDefs`), stage timelines (`Stages.cs`, written
@@ -39,7 +40,9 @@ stages, enemies or art.
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
   loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
   on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
-  `Hud` is IMGUI. Field (X, Y) maps to world (x, 0, z). The background (`Game/Art/Backdrop.cs`)
+  `Hud` is IMGUI (partial: `Hud.Hangar.cs` is the loadout screen; the game starts there with a live
+  practice preview behind it). `WeaponViews` draws beams, the Solar Lance, the Aegis ring, arcs and
+  wingmates. Field (X, Y) maps to world (x, 0, z). The background (`Game/Art/Backdrop.cs`)
   is black space with a parallax starfield at y = −14 (Rob's call, replacing the terrain and
   ocean backdrops).
 - `Game/Art/` — models. Ships and enemies come from **Blender** (decided by Rob): FBX files in
@@ -51,8 +54,9 @@ stages, enemies or art.
   `Backdrop` (starfield), `InstancedBatch` (GPU-instanced bullets and particles),
   `Mats` + `Palette` (the dark sci-fi colours). Blender sources live in `Art/Blender/`.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
-- `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism) and
-  `StageTests` (enemies, damage, combo, pickups, stage flow).
+- `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
+  `StageTests` (enemies, damage, combo, pickups, stage flow) and `WeaponTests` (every wing weapon
+  and core).
 
 ## Verifying changes
 - **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:

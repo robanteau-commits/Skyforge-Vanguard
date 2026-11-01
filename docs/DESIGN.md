@@ -331,7 +331,7 @@ port stays possible.
 |---|---|---|
 | M0 | Project scaffold, scene, camera, ship flying, Pulse Repeater | Fly and shoot in an empty sky |
 | M1 | Enemies, bullets, damage, shield and hull, stage timeline; stage 1-1 (done in v0.2.0) | A full first stage |
-| M2 | All 8 wing weapons and the core specials, the hangar loadout screen | Try every loadout on 1-1 |
+| M2 | All 8 wing weapons and the core specials, the hangar loadout screen (done in v0.3.0; everything unlocked for testing until M3's shop) | Try every loadout on 1-1 |
 | M3 | Credits, shop, upgrades, results screen, medals, saves, world map | The full loop |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | All of World 1 |
 | M5 | Audio, polish, settings, touch controls, mobile and web builds | v1 on all platforms |

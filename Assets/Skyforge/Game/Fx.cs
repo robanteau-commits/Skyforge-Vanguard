@@ -122,6 +122,32 @@ namespace Skyforge.Game
                         for (int i = 0; i < 16; i++)
                             Spawn(_muzzle, ToWorld(e.Pos), RandomDir(6f, 15f), Random.Range(0.3f, 0.6f), 0.12f, 0, 2f);
                         break;
+                    case SimEventType.CoreActivated:
+                        if (e.EnemyId == (int)WeaponKind.PulseNova)
+                        {
+                            // A fast ring of cyan sparks sweeping out across the screen.
+                            Spawn(_flash, ToWorld(e.Pos, 0.3f), Vector3.zero, 0.3f, 2.5f, 1);
+                            for (int i = 0; i < 48; i++)
+                            {
+                                float a = i * Mathf.PI * 2f / 48f;
+                                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                                Spawn(_muzzle, ToWorld(e.Pos) + dir * 0.8f, dir * 26f, 0.7f, 0.22f, 0);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < 16; i++)
+                                Spawn(_muzzle, ToWorld(e.Pos), RandomDir(4f, 9f), 0.35f, 0.12f, 0, 3f);
+                        }
+                        break;
+                    case SimEventType.AegisBlock:
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float a = Random.Range(0f, Mathf.PI * 2f);
+                            var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                            Spawn(_muzzle, ToWorld(e.Pos) + dir * 1.9f, dir * 3f, 0.2f, 0.12f, 0, 4f);
+                        }
+                        break;
                     case SimEventType.Collected:
                         var layer = e.PickupKind == PickupKind.Repair ? _green : _gold;
                         Spawn(layer, ToWorld(e.Pos, 0.2f), Vector3.zero, 0.15f, e.PickupKind == PickupKind.Repair ? 0.7f : 0.35f, 1);

@@ -186,7 +186,14 @@ namespace Skyforge.Game
             {
                 switch (fitted.Weapon.Kind)
                 {
-                    case WeaponKind.PulseRepeater: PulseRepeaterPod(b, fitted.Stats.Streams); break;
+                    case WeaponKind.PulseRepeater: PulseRepeaterPod(b, fitted.Stats.Count); break;
+                    case WeaponKind.ScatterCannon: ScatterPod(b, fitted.Stats.Count); break;
+                    case WeaponKind.LanceDriver: LancePod(b, fitted.Level); break;
+                    case WeaponKind.SunlineBeam: SunlinePod(b, fitted.Level); break;
+                    case WeaponKind.SeekerPods: SeekerPod(b, fitted.Stats.Count); break;
+                    case WeaponKind.HornetRack: HornetPod(b, fitted.Stats.Count); break;
+                    case WeaponKind.ArcCoil: ArcPod(b, fitted.Level); break;
+                    case WeaponKind.RicochetDisc: RicochetPod(b, fitted.Stats.Count); break;
                 }
             }
             var go = b.BuildObject(side == Side.Left ? "PodL" : "PodR", body,
@@ -228,6 +235,98 @@ namespace Skyforge.Game
                 b.Box(new Vector3(bx, 0f, 0.43f), new Vector3(0.045f, 0.045f, 0.3f), Light);
                 b.Box(new Vector3(bx, 0f, 0.6f), new Vector3(0.05f, 0.05f, 0.04f), Glow);
             }
+        }
+
+        // Pod material slots: 0 dark, 1 light, 2 glow. Muzzles sit at Z = +0.6 (where shots start).
+        const int PDark = 0, PLight = 1, PGlow = 2;
+
+        /// <summary>The common pod body and pylon; <paramref name="halfWidth"/> sets how chunky it is.</summary>
+        static void PodBody(MeshBuilder b, float halfWidth, float front = 0.3f)
+        {
+            b.Loft(new[]
+            {
+                new R(front, halfWidth * 0.6f, halfWidth * 0.55f),
+                new R(front - 0.15f, halfWidth, halfWidth * 0.85f),
+                new R(-0.45f, halfWidth, halfWidth * 0.85f),
+                new R(-0.7f, halfWidth * 0.45f, halfWidth * 0.4f),
+            }, 6, PDark, startDeg: 90f);
+            b.Box(new Vector3(0f, 0.11f, -0.15f), new Vector3(0.05f, 0.08f, 0.5f), PLight); // pylon
+        }
+
+        /// <summary>Scatter Cannon: a short, wide pod with a flared muzzle, one glowing bore per pellet.</summary>
+        static void ScatterPod(MeshBuilder b, int pellets)
+        {
+            PodBody(b, 0.16f);
+            b.ExtrudeXZ(new[] { new Vector2(-0.1f, 0.3f), new Vector2(0.1f, 0.3f), new Vector2(0.24f, 0.58f), new Vector2(-0.24f, 0.58f) }, -0.06f, 0.06f, PLight);
+            for (int i = 0; i < pellets; i++)
+            {
+                float x = pellets == 1 ? 0f : -0.18f + 0.36f * i / (pellets - 1);
+                b.Box(new Vector3(x, 0f, 0.6f), new Vector3(0.035f, 0.035f, 0.03f), PGlow);
+            }
+        }
+
+        /// <summary>Lance Driver: a long rail gun, two rails with a glowing channel between them.</summary>
+        static void LancePod(MeshBuilder b, int level)
+        {
+            PodBody(b, 0.12f);
+            float w = 0.06f + 0.01f * level;
+            for (int s = -1; s <= 1; s += 2)
+                b.Box(new Vector3(s * w, 0f, 0.3f), new Vector3(0.035f, 0.07f, 0.65f), PLight);
+            b.Box(new Vector3(0f, 0f, 0.3f), new Vector3(w, 0.02f, 0.6f), PGlow);
+        }
+
+        /// <summary>Sunline Beam: a lens emitter framed at the front; the lens grows with the level.</summary>
+        static void SunlinePod(MeshBuilder b, int level)
+        {
+            PodBody(b, 0.14f);
+            float r = 0.07f + 0.012f * level;
+            b.Box(new Vector3(0f, 0f, 0.48f), new Vector3(r * 3.2f, r * 3.2f, 0.05f), PLight);
+            b.Octahedron(new Vector3(0f, 0f, 0.55f), new Vector3(r, r, r * 1.3f), PGlow);
+        }
+
+        /// <summary>Seeker Pods: a boxy launcher with one tube per missile.</summary>
+        static void SeekerPod(MeshBuilder b, int tubes)
+        {
+            PodBody(b, 0.15f);
+            b.Box(new Vector3(0f, 0.02f, 0.38f), new Vector3(0.36f, 0.2f, 0.36f), PLight);
+            for (int i = 0; i < tubes; i++)
+            {
+                float x = tubes == 1 ? 0f : -0.11f + 0.22f * i / (tubes - 1);
+                b.Box(new Vector3(x, 0.02f, 0.57f), new Vector3(0.07f, 0.07f, 0.03f), PGlow);
+            }
+        }
+
+        /// <summary>Hornet Rack: a wide block with a grid of micro-missile tubes.</summary>
+        static void HornetPod(MeshBuilder b, int missiles)
+        {
+            PodBody(b, 0.15f);
+            b.Box(new Vector3(0f, 0.02f, 0.36f), new Vector3(0.44f, 0.22f, 0.4f), PLight);
+            int cols = (missiles + 1) / 2;
+            for (int i = 0; i < missiles; i++)
+            {
+                int c = i % cols, r = i / cols;
+                float x = cols == 1 ? 0f : -0.16f + 0.32f * c / (cols - 1);
+                b.Box(new Vector3(x, -0.03f + r * 0.1f, 0.57f), new Vector3(0.045f, 0.045f, 0.03f), PGlow);
+            }
+        }
+
+        /// <summary>Arc Coil: glowing coil rings along a spine, with two prongs at the front.</summary>
+        static void ArcPod(MeshBuilder b, int level)
+        {
+            PodBody(b, 0.12f);
+            int coils = 2 + (level + 1) / 2;
+            for (int i = 0; i < coils; i++)
+                b.Octahedron(new Vector3(0f, 0f, 0.1f - i * 0.16f), new Vector3(0.17f, 0.17f, 0.03f), PGlow);
+            for (int s = -1; s <= 1; s += 2)
+                b.Beam(new Vector3(s * 0.06f, 0f, 0.3f), new Vector3(s * 0.11f, 0f, 0.6f), 0.03f, 0.03f, PLight);
+        }
+
+        /// <summary>Ricochet Disc: a launcher with a glowing disc (two at higher levels) ready on top.</summary>
+        static void RicochetPod(MeshBuilder b, int discs)
+        {
+            PodBody(b, 0.14f);
+            for (int i = 0; i < discs; i++)
+                b.Octahedron(new Vector3(0f, 0.13f + 0.07f * i, 0.32f - 0.12f * i), new Vector3(0.2f, 0.03f, 0.2f), PGlow);
         }
     }
 }

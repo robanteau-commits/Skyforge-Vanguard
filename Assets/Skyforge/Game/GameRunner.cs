@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using Skyforge.Simulation;
+// The Input System has its own PlayerInput component; ours is the simulation's input struct.
+using PlayerInput = Skyforge.Simulation.PlayerInput;
 
 namespace Skyforge.Game
 {
@@ -20,11 +22,19 @@ namespace Skyforge.Game
         public PlayfieldCamera View { get; private set; }
         public PlayerControls Controls { get; } = new PlayerControls();
         public bool Paused { get; private set; }
+        /// <summary>In the hangar: the loadout screen, with a live practice flight behind it as a preview.</summary>
+        public bool InHangar { get; private set; } = true;
 
-        Loadout _loadout = Loadout.Starter();
+        /// <summary>The ship's current fit (kept between stages; saved in M3).</summary>
+        public Loadout Loadout { get; private set; } = Loadout.Starter();
         /// <summary>The stage to fly; null = practice drones.</summary>
-        StageDef _stage = Stages.FirstLight;
+        public StageDef SelectedStage { get; set; } = Stages.FirstLight;
+
+        /// <summary>The hangar preview's core charges this many times faster, so you see it fire.</summary>
+        const float PreviewCoreCharge = 8f;
+
         Asteroids _asteroids;
+        WeaponViews _weapons;
         Transform _world;
         Backdrop _backdrop;
         ShipView _ship;
@@ -73,11 +83,12 @@ namespace Skyforge.Game
             _backdrop.transform.SetParent(_world, false);
             _enemies = new EnemyViews(_world);
             _asteroids = new Asteroids(_world);
+            _weapons = new WeaponViews(_world);
             _shots = new ShotRenderer();
             _fx = new Fx();
             gameObject.AddComponent<Hud>().Init(this);
 
-            StartStage();
+            OpenHangar();
         }
 
         /// <summary>
@@ -114,55 +125,85 @@ namespace Skyforge.Game
 
         // ------------------------------------------------------------------ stage
 
-        void StartStage()
+        /// <summary>Show the hangar, with a practice flight of the current loadout behind it.</summary>
+        public void OpenHangar()
         {
-            Sim = new StageSim(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = _loadout, Stage = _stage });
+            InHangar = true;
+            Begin(new StageSetup { Seed = 7, Loadout = Loadout, Stage = null, CoreChargeMultiplier = PreviewCoreCharge });
+        }
+
+        /// <summary>Fly the selected stage with the current loadout.</summary>
+        public void Launch()
+        {
+            InHangar = false;
+            Begin(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = Loadout, Stage = SelectedStage });
+        }
+
+        /// <summary>Fit a weapon to a slot (hangar). Restarts the preview so the change shows at once.</summary>
+        public void Fit(WeaponSlot slot, Side side, WeaponDef weapon, int level)
+        {
+            var l = new Loadout { LeftWing = Loadout.LeftWing, RightWing = Loadout.RightWing, Core = Loadout.Core };
+            var fitted = new Fitted(weapon, level);
+            if (slot == WeaponSlot.Core) l.Core = fitted;
+            else if (side == Side.Left) l.LeftWing = fitted;
+            else l.RightWing = fitted;
+            Loadout = l;
+            if (InHangar) OpenHangar();
+        }
+
+        void Begin(StageSetup setup)
+        {
+            Sim = new StageSim(setup);
             _prevShipPos = Sim.Player.Pos;
             _accumulator = 0f;
             _pendingDrag = Vec2.Zero;
             _pendingCore = false;
             _enemies.Clear();
             _asteroids.Clear();
+            _weapons.Clear();
             _fx.Clear();
-            if (_ship == null) _ship = new ShipView(_world, _loadout);
-            else _ship.RefitPods(_loadout);
+            if (_ship == null) _ship = new ShipView(_world, Loadout);
+            else _ship.RefitPods(Loadout);
             Paused = false;
         }
 
-        void SetWeaponLevel(int level)
+        /// <summary>The hangar preview flies itself: it hovers mid-screen, weaving a little, and fires its core whenever it's ready.</summary>
+        PlayerInput PreviewInput()
         {
-            _loadout = new Loadout
-            {
-                LeftWing = new Fitted(Weapons.PulseRepeater, level),
-                RightWing = new Fitted(Weapons.PulseRepeater, level),
-                Core = _loadout.Core,
-            };
-            StartStage();
+            var input = PlayerInput.Towards(new Vec2(3f * Mathf.Sin(Sim.Time * 0.6f), -4f));
+            input.Core = true;
+            return input;
         }
 
         // ------------------------------------------------------------------ loop
 
         void Update()
         {
-            if (PlayerControls.PausePressed()) Paused = !Paused;
-            else if (Paused && ResumeClicked()) Paused = false;
-            if (PlayerControls.RestartPressed()) StartStage();
-            int level = PlayerControls.LevelKeyPressed();
-            if (level > 0) SetWeaponLevel(level);
             int stageKey = PlayerControls.StageKeyPressed();
             if (stageKey > 0)
             {
-                _stage = stageKey == 6 ? Stages.FirstLight : stageKey == 7 ? Stages.ArmadaSampler : null;
-                StartStage();
+                SelectedStage = stageKey == 6 ? Stages.FirstLight : stageKey == 7 ? Stages.ArmadaSampler : null;
+                Launch();
             }
-            // On the results screen, any confirm flies again.
-            if (Sim.Status != StageStatus.Playing && Sim.TimeSinceEnd >= Hud.ResultsDelay + 0.3f && PlayerControls.ConfirmPressed())
-                StartStage();
+            else if (InHangar)
+            {
+                if (PlayerControls.LaunchPressed()) Launch();
+            }
+            else
+            {
+                if (PlayerControls.PausePressed()) Paused = !Paused;
+                else if (Paused && ResumeClicked()) Paused = false;
+                if (PlayerControls.RestartPressed()) Launch();
+                if (PlayerControls.HangarPressed()) OpenHangar();
+                // On the results screen, any confirm flies again.
+                if (Sim.Status != StageStatus.Playing && Sim.TimeSinceEnd >= Hud.ResultsDelay + 0.3f && PlayerControls.ConfirmPressed())
+                    Launch();
+            }
 
             float dt = Mathf.Min(Time.deltaTime, MaxFrameTime);
             if (!Paused)
             {
-                var input = Controls.Read(View);
+                var input = InHangar ? PreviewInput() : Controls.Read(View);
                 // Touch movement and core presses are per frame; hold them until a step uses them.
                 _pendingDrag += input.Drag;
                 _pendingCore |= input.Core;
@@ -180,12 +221,14 @@ namespace Skyforge.Game
                     Sim.Step(step);
                     _enemies.AfterStep(Sim);
                     _fx.Consume(Sim.Events);
+                    _weapons.Consume(Sim.Events);
                     _asteroids.Consume(Sim.Events, Sim.Time);
                     foreach (var ev in Sim.Events)
                     {
                         if (ev.Type == SimEventType.HullHit) View.Shake(0.35f);
                         else if (ev.Type == SimEventType.PlayerDestroyed) View.Shake(0.8f);
                         else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Warden) View.Shake(0.5f);
+                        else if (ev.Type == SimEventType.CoreActivated && ev.EnemyId == (int)WeaponKind.PulseNova && !InHangar) View.Shake(0.45f);
                     }
                     _accumulator -= Field.Dt;
                 }
@@ -204,6 +247,7 @@ namespace Skyforge.Game
             _backdrop.SetTime(renderTime);
             _asteroids.Render(renderTime);
             _enemies.Render(alpha, Paused ? 0f : dt);
+            _weapons.Render(Sim, shipPos, renderTime, Paused ? 0f : dt);
             _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime);
             _fx.Tick(Paused ? 0f : dt);
         }
@@ -218,8 +262,8 @@ namespace Skyforge.Game
 
         void OnApplicationFocus(bool focused)
         {
-            // Phones and browser tabs: losing focus pauses the stage.
-            if (!focused && Sim != null) Paused = true;
+            // Phones and browser tabs: losing focus pauses the stage (the hangar keeps running).
+            if (!focused && Sim != null && !InHangar) Paused = true;
         }
 
         void OnDestroy()
@@ -228,6 +272,7 @@ namespace Skyforge.Game
             _fx?.Dispose();
             _enemies?.Dispose();
             _asteroids?.Dispose();
+            _weapons?.Dispose();
         }
     }
 }

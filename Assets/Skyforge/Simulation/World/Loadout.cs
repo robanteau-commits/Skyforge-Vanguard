@@ -23,6 +23,7 @@ namespace Skyforge.Simulation
         {
             LeftWing = new Fitted(Weapons.PulseRepeater, 1),
             RightWing = new Fitted(Weapons.PulseRepeater, 1),
+            Core = new Fitted(Weapons.PulseNova, 1),
         };
 
         public Fitted Wing(Side side) => side == Side.Left ? LeftWing : RightWing;

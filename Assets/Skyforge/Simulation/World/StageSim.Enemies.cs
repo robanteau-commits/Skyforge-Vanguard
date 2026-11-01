@@ -292,7 +292,7 @@ namespace Skyforge.Simulation
 
         void CheckContact(Enemy e)
         {
-            if (!Player.Alive || Player.Invulnerable > 0f) return;
+            if (!Player.Alive || (Player.Invulnerable > 0f && !AegisUp)) return;
             float r = e.Radius + PlayerShip.BodyRadius;
             if (Vec2.DistanceSq(e.Pos, Player.Pos) > r * r) return;
             HurtPlayer(e.Def.ContactDamage);

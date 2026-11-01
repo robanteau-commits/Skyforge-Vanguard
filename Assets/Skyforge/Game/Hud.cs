@@ -8,13 +8,14 @@ namespace Skyforge.Game
     /// play field; on a phone a compact version overlays the field's top and bottom edges.
     /// Shows score, combo, credits, kills, hull and shield, stage progress, and the results screen.
     /// </summary>
-    public sealed class Hud : MonoBehaviour
+    public sealed partial class Hud : MonoBehaviour
     {
         /// <summary>Seconds after the stage ends before the results appear.</summary>
         public const float ResultsDelay = 1.5f;
 
         GameRunner _runner;
         GUIStyle _title, _label, _value, _combo, _small, _centre, _hint, _resultLine, _resultValue, _gold;
+        GUIStyle _button, _buttonOn, _bigButton, _body, _heading;
         float _styleScale = -1f;
         float _fps, _fpsTimer;
         int _fpsFrames;
@@ -56,6 +57,40 @@ namespace Skyforge.Game
             _hint = S(16, Palette.HudDim, FontStyle.Normal, TextAnchor.UpperCenter);
             _resultLine = S(18, Palette.HudDim, FontStyle.Normal, TextAnchor.MiddleLeft);
             _resultValue = S(20, Palette.HudText, FontStyle.Bold, TextAnchor.MiddleRight);
+            _body = S(15, Palette.HudText);
+            _heading = S(22, Palette.HudText, FontStyle.Bold);
+            _button = ButtonStyle(15, scale, new Color(0.09f, 0.11f, 0.15f), new Color(0.14f, 0.17f, 0.23f), Palette.HudText);
+            _buttonOn = ButtonStyle(15, scale, new Color(0.07f, 0.3f, 0.38f), new Color(0.09f, 0.36f, 0.45f), Color.white);
+            _bigButton = ButtonStyle(22, scale, new Color(0.1f, 0.55f, 0.68f), new Color(0.15f, 0.65f, 0.8f), Color.white);
+            _bigButton.fontStyle = FontStyle.Bold;
+            _bigButton.alignment = TextAnchor.MiddleCenter;
+        }
+
+        static readonly System.Collections.Generic.Dictionary<Color, Texture2D> Swatches = new System.Collections.Generic.Dictionary<Color, Texture2D>();
+
+        static Texture2D Swatch(Color c)
+        {
+            if (Swatches.TryGetValue(c, out var t) && t != null) return t;
+            t = new Texture2D(1, 1) { hideFlags = HideFlags.DontSave };
+            t.SetPixel(0, 0, c);
+            t.Apply();
+            Swatches[c] = t;
+            return t;
+        }
+
+        static GUIStyle ButtonStyle(int size, float scale, Color bg, Color hover, Color text)
+        {
+            return new GUIStyle(GUI.skin.button)
+            {
+                fontSize = Mathf.Max(9, Mathf.RoundToInt(size * scale)),
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = true,
+                padding = new RectOffset(Mathf.RoundToInt(10 * scale), Mathf.RoundToInt(8 * scale), Mathf.RoundToInt(4 * scale), Mathf.RoundToInt(4 * scale)),
+                normal = { background = Swatch(bg), textColor = text },
+                hover = { background = Swatch(hover), textColor = text },
+                active = { background = Swatch(hover), textColor = Color.white },
+                focused = { background = Swatch(bg), textColor = text },
+            };
         }
 
         void OnGUI()
@@ -70,6 +105,11 @@ namespace Skyforge.Game
 
             float sideW = field.x;
             bool panels = sideW >= 170f * scale;
+            if (_runner.InHangar)
+            {
+                Hangar(field, scale, panels);
+                return;
+            }
             if (panels)
             {
                 DrawRect(new Rect(0f, 0f, sideW, Screen.height), Palette.PanelBg);
@@ -122,14 +162,16 @@ namespace Skyforge.Game
             y += 8f * s;
             Line(ref y, r, "HULL  " + Mathf.CeilToInt(p.Hull) + " / " + Mathf.RoundToInt(p.MaxHull), _label, 22f * s);
             Bar(ref y, r, p.Hull / p.MaxHull, p.Hull < p.MaxHull * 0.3f ? Palette.HudDanger : Palette.HudHull, 12f * s, s);
+            y += 8f * s;
+            CoreMeter(ref y, r, sim, s);
             y += 16f * s;
 
             Line(ref y, r, "LOADOUT", _label, 22f * s);
             Line(ref y, r, "Wings  " + Describe(sim.Loadout.LeftWing) + (Same(sim.Loadout) ? "" : " / " + Describe(sim.Loadout.RightWing)), _small, 22f * s);
-            Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "— (M2)" : Describe(sim.Loadout.Core)), _small, 22f * s);
+            Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)), _small, 22f * s);
 
             var foot = new Rect(r.x, r.yMax - 44f * s, r.width, 44f * s);
-            GUI.Label(foot, "v" + Application.version + " · M1\n" + Mathf.RoundToInt(_fps) + " fps", _small);
+            GUI.Label(foot, "v" + Application.version + " · M2\n" + Mathf.RoundToInt(_fps) + " fps", _small);
         }
 
         void RightPanel(Rect r, float s)
@@ -142,14 +184,12 @@ namespace Skyforge.Game
                 "Shift or right mouse — precision (half speed)\n" +
                 "Gamepad — left stick, LT precision\n" +
                 "Touch — drag anywhere\n\n" +
+                "Space, left click, gamepad A or a second finger — fire the core when it's charged\n\n" +
                 "Wings fire automatically. Dodge the orange bullets; a red glow means an enemy is about to fire. " +
                 "Your shield takes hits first and recharges; hull damage resets the combo. Fly near gold shards to collect them.\n\n" +
-                "TEST KEYS\n" +
-                "6 — stage 1-1 First Light\n" +
-                "7 — Armada Sampler (every enemy)\n" +
-                "8 — practice drones\n" +
-                "1–5 — Pulse Repeater level (restarts)\n" +
-                "R — restart · Esc / P — pause", _small, 420f * s);
+                "H — back to the hangar\n" +
+                "R — restart · Esc / P — pause\n" +
+                "6 / 7 / 8 — fly 1-1 / Armada Sampler / practice", _small, 440f * s);
         }
 
         void Overlay(Rect field, StageSim sim, float s)
@@ -160,6 +200,14 @@ namespace Skyforge.Game
             GUI.Label(top, sim.Score.ToString("N0"), _value);
             var comboStyle = new GUIStyle(_combo) { alignment = TextAnchor.UpperRight };
             GUI.Label(top, "×" + sim.Combo.ToString("0.0"), comboStyle);
+            if (sim.CoreWeapon != null)
+            {
+                var core = new Rect(field.x + pad, top.yMax + 4f * s, w, 24f * s);
+                var coreStyle = new GUIStyle(_small) { alignment = TextAnchor.UpperRight };
+                string text = sim.Player.CoreActive ? sim.CoreWeapon.Name + " " + Mathf.CeilToInt(sim.Player.CoreTimer) + "s"
+                    : sim.Player.CoreReady ? "CORE READY: tap with a second finger" : "core " + Mathf.FloorToInt(sim.Player.CoreCharge) + "%";
+                GUI.Label(core, text, coreStyle);
+            }
             var credits = new Rect(field.x + pad, top.yMax + 4f * s, w, 24f * s);
             GUI.Label(credits, "CR " + sim.Credits, new GUIStyle(_gold) { fontSize = Mathf.RoundToInt(18 * s) });
 
@@ -195,9 +243,12 @@ namespace Skyforge.Game
             ResultRow(ref y, x, w, s, cleared ? "Credits" : "Credits kept (half)", sim.CreditsBanked.ToString("N0"));
             y += 24f * s;
 
-            string again = _runner.Controls.UsingTouch ? "Tap to fly again" : "R, click or Space to fly again";
-            GUI.Label(new Rect(field.x, y, field.width, 30f * s), again, _hint);
-            GUI.Label(new Rect(field.x, y + 30f * s, field.width, 30f * s), "6 First Light · 7 Armada Sampler · 8 Practice", _hint);
+            float bw = (w - 10f * s) * 0.5f;
+            if (GUI.Button(new Rect(x, y, bw, 48f * s), "FLY AGAIN", _bigButton)) _runner.Launch();
+            if (GUI.Button(new Rect(x + bw + 10f * s, y, bw, 48f * s), "HANGAR", _bigButton)) _runner.OpenHangar();
+            y += 56f * s;
+            if (!_runner.Controls.UsingTouch)
+                GUI.Label(new Rect(field.x, y, field.width, 30f * s), "R or Space: fly again · H: hangar", _hint);
         }
 
         void ResultRow(ref float y, float x, float w, float s, string label, string value)

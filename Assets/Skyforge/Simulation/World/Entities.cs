@@ -23,6 +23,35 @@ namespace Skyforge.Simulation
         /// <summary>Pickups inside this distance fly to the ship.</summary>
         public float MagnetRange = 2.5f;
 
+        // Sunline Beam, per wing (index 0 = left, 1 = right).
+        /// <summary>The beam is firing from this wing.</summary>
+        public readonly bool[] BeamOn = new bool[2];
+        /// <summary>Where the beam ends (field Y): the enemy it's burning, or past the top of the screen.</summary>
+        public readonly float[] BeamEndY = new float[2];
+        /// <summary>Enemy the beam is on (0 = none) and how long it's been on it (the damage ramps up).</summary>
+        public readonly int[] BeamTarget = new int[2];
+        public readonly float[] BeamTime = new float[2];
+
+        // Core special.
+        /// <summary>0..<see cref="CoreChargeMax"/>; the core can fire when full.</summary>
+        public float CoreCharge;
+        /// <summary>Charge rate multiplier (the Capacitor airframe upgrade).</summary>
+        public float Capacitor = 1f;
+        /// <summary>A lasting core effect is running (Solar Lance, Aegis Field, Wingmates).</summary>
+        public bool CoreActive;
+        /// <summary>Seconds left on the running core effect.</summary>
+        public float CoreTimer;
+        /// <summary>Wingmates: how many drones are flying, and each one's fire cooldowns (left/right weapon).</summary>
+        public int WingmateCount;
+        public readonly float[] WingmateCooldown = new float[3];
+
+        public const float CoreChargeMax = 100f;
+        public bool CoreReady => CoreCharge >= CoreChargeMax;
+
+        /// <summary>Wingmate drone <paramref name="i"/>'s position relative to the ship.</summary>
+        public static Vec2 WingmateOffset(int i) =>
+            i == 0 ? new Vec2(-2.6f, -0.8f) : i == 1 ? new Vec2(2.6f, -0.8f) : new Vec2(0f, -2.4f);
+
         /// <summary>The hitbox: a small circle around the core, much smaller than the model.</summary>
         public const float HitRadius = 0.35f;
         /// <summary>Radius used for ramming enemies (the airframe, not just the core).</summary>
@@ -34,9 +63,9 @@ namespace Skyforge.Simulation
         public static Vec2 PodOffset(Side side) => new Vec2(side == Side.Left ? -1.0f : 1.0f, 0.6f);
     }
 
-    public enum ShotVisual : byte { PulseBolt }
+    public enum ShotVisual : byte { PulseBolt, Pellet, LanceBolt, Missile, MicroMissile, Disc }
 
-    /// <summary>A projectile fired by the player.</summary>
+    /// <summary>A projectile fired by the player (or a wingmate).</summary>
     public struct Shot
     {
         public Vec2 Pos;
@@ -45,6 +74,21 @@ namespace Skyforge.Simulation
         public float Radius;
         public Side Wing;
         public ShotVisual Visual;
+        /// <summary>Seconds left to live (0 = until it leaves the screen).</summary>
+        public float Life;
+        /// <summary>Passes through enemies, hitting each once.</summary>
+        public bool Pierce;
+        /// <summary>Discs: hits left before it's used up (0 = not a disc).</summary>
+        public int HitsLeft;
+        /// <summary>The enemy it last hit (piercing shots and discs skip it).</summary>
+        public int LastHit;
+        /// <summary>Blast radius on impact (0 = single target).</summary>
+        public float Blast;
+        /// <summary>Homing: degrees per second it can turn (0 = flies straight), and its target.</summary>
+        public float TurnRate;
+        public int TargetId;
+        /// <summary>Bounces off the sides of the screen.</summary>
+        public bool Bounce;
     }
 
     public enum EnemyShotVisual : byte
@@ -150,6 +194,14 @@ namespace Skyforge.Simulation
         BastionSpawned,
         /// <summary>The stage was cleared.</summary>
         StageCleared,
+        /// <summary>An Arc Coil bolt from Pos to To.</summary>
+        Arc,
+        /// <summary>The core special fired (EnemyId = (int)WeaponKind of the core).</summary>
+        CoreActivated,
+        /// <summary>A lasting core effect ran out.</summary>
+        CoreEnded,
+        /// <summary>The Aegis Field absorbed a hit.</summary>
+        AegisBlock,
     }
 
     /// <summary>Something that happened this step, for effects and sound. Gameplay never reads these.</summary>
@@ -162,5 +214,7 @@ namespace Skyforge.Simulation
         public int EnemyId;
         public float Value;
         public PickupKind PickupKind;
+        /// <summary>Second point (Arc: where the bolt ends).</summary>
+        public Vec2 To;
     }
 }

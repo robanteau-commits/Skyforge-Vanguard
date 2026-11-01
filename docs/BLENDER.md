@@ -132,6 +132,14 @@ Unity applies the matching import settings automatically to anything in
 1. **Rebuild `vanguard` in the Kestrel style (§8).** Rob's current priority.
 2. `vanguard_core`, `vanguard_flame`.
 3. `pod_pulseRepeater_lv1` … `_lv5`, styled to match: graphite nacelle pods with glowing muzzles.
+   Then the other seven weapons' pods (all in the game with code-built stand-ins since v0.3.0):
+   `pod_scatterCannon` (short, wide, flared muzzle), `pod_lanceDriver` (long twin-rail gun),
+   `pod_sunlineBeam` (lens emitter), `pod_seekerPods` (box launcher, one tube per missile),
+   `pod_hornetRack` (wide block with a grid of small tubes), `pod_arcCoil` (glowing coil rings and
+   two prongs), `pod_ricochetDisc` (launcher with a disc on top). A plain `pod_<id>` covers every
+   level; add `_lv<N>` versions where the level changes the look (barrel or tube counts).
+   `wingmate`: the Wingmates core's escort drone, a small delta about 1.4 across (not loaded yet;
+   ask the cloud session to hook it up when it exists).
 4. `enemy_practiceDrone`.
 5. The M1 enemies, now in the game with code-built stand-ins: `enemy_gnat`, `enemy_needle`,
    `enemy_ramDrone`, `enemy_spineMine`, `enemy_warden`, `enemy_bastion`, `prop_asteroid`.

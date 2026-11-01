@@ -121,6 +121,17 @@ namespace Skyforge.Game
                    (pad != null && pad.startButton.wasPressedThisFrame);
         }
 
+        /// <summary>H: back to the hangar.</summary>
+        public static bool HangarPressed() => Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame;
+
+        /// <summary>Enter (or gamepad Start) in the hangar: launch.</summary>
+        public static bool LaunchPressed()
+        {
+            var kb = Keyboard.current; var pad = Gamepad.current;
+            return (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) ||
+                   (pad != null && pad.startButton.wasPressedThisFrame);
+        }
+
         /// <summary>Test-flight shortcut: number key 1–5 pressed this frame, else 0.</summary>
         public static int LevelKeyPressed()
         {
@@ -147,14 +158,12 @@ namespace Skyforge.Game
             return 0;
         }
 
-        /// <summary>Any click, tap, Space, Enter or gamepad A this frame (e.g. "fly again").</summary>
+        /// <summary>Space, Enter or gamepad A this frame (e.g. "fly again"). Clicks and taps go to on-screen buttons instead.</summary>
         public static bool ConfirmPressed()
         {
-            var kb = Keyboard.current; var mouse = Mouse.current; var pad = Gamepad.current; var touch = Touchscreen.current;
+            var kb = Keyboard.current; var pad = Gamepad.current;
             return (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame)) ||
-                   (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
-                   (pad != null && pad.buttonSouth.wasPressedThisFrame) ||
-                   (touch != null && touch.primaryTouch.press.wasPressedThisFrame);
+                   (pad != null && pad.buttonSouth.wasPressedThisFrame);
         }
     }
 }

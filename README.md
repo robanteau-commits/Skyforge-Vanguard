@@ -6,13 +6,24 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M1, the first stage (v0.2.2)
+- **Status:** milestone M2, weapons and the hangar (v0.3.0)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
 2. Unity Hub → **Projects** → **Add** → **Add project from disk** → choose
    `D:\Games\SkyforgeVanguard`. The first open takes a few minutes while Unity builds its cache.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
+
+## What's in M2 — weapons and the hangar
+- **The hangar** (the game starts here): fit any of the 8 wing weapons to each wing and any of
+  the 4 core specials, at any level 1–5, pick a stage and launch. Your ship flies a live preview
+  with the loadout behind the menu. Everything is unlocked for testing until M3's shop.
+- **Wing weapons:** Pulse Repeater, Scatter Cannon (fan), Lance Driver (piercing), Sunline Beam
+  (continuous, ramps up), Seeker Pods (homing, blast), Hornet Rack (micro-missile salvos), Arc Coil
+  (chain lightning), Ricochet Disc (bounces off the sides). Each has its own pod on the wing.
+- **Core specials,** charged by time and kills, fired with Space / left click / gamepad A / a
+  second finger: Pulse Nova (clears bullets, hits everything), Solar Lance (mega beam), Aegis Field
+  (absorbs hits, slows bullets), Wingmates (escort drones copying your wings).
 
 ## What's in M1 — the first stage
 - **Stage 1-1 "First Light"** (about 2½ minutes): waves of Gnats and Needles, closed by the first
@@ -28,8 +39,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
   Repeater on both wings, firing automatically.
 - Controls: the ship follows the mouse; WASD / arrows; gamepad stick; touch drag. Shift / right
   mouse / LT = precision (half speed). Esc / P = pause.
-- Test keys: **6** stage 1-1, **7** Armada Sampler (every enemy type), **8** practice drones,
-  **1–5** Pulse Repeater level (restarts), **R** restarts.
+- Keys: **H** hangar, **R** restart, **6 / 7 / 8** fly stage 1-1 / Armada Sampler / practice.
 - Portrait 9:16 play field; on wide screens the score and controls sit in side panels.
 
 ## Milestones (docs/DESIGN.md §12)
@@ -37,8 +47,8 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 |---|---|---|
 | M0 | Project scaffold, ship flying, Pulse Repeater | **done** |
 | M1 | Enemies that shoot back, damage, shield and hull, stage timeline, stage 1-1 | **done** |
-| M2 | All 8 wing weapons, the 4 core specials, hangar loadout screen | next |
-| M3 | Credits, shop, upgrades, results, medals, saves, world map | |
+| M2 | All 8 wing weapons, the 4 core specials, hangar loadout screen | **done** |
+| M3 | Credits, shop, upgrades, results, medals, saves, world map | next |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | |
 | M5 | Audio, polish, settings, touch, mobile and web builds | |
 
