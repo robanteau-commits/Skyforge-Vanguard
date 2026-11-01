@@ -23,6 +23,10 @@ stages, enemies or art.
 - No transparent materials: effects fade by shrinking, and every material is URP Lit or Unlit
   (both in Graphics → Always Included Shaders, so `Shader.Find` works in builds). Glow = Unlit
   with an HDR colour above 1, which the bloom picks up.
+- Graphics → Instancing Variants must stay **Keep All** (`m_InstancingStripping: 2`): all materials
+  are made in code, so "Strip Unused" removes the instancing variants from builds and everything
+  drawn by `InstancedBatch` (bullets, pickups, particles, stars) vanishes outside the Editor
+  (v0.7.0 bug).
 - Play mode runs without a domain reload: reset statics in a
   `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]` method (see `Mats.ResetCache`).
 - Every new file under `Assets/` needs its `.meta` committed: run
