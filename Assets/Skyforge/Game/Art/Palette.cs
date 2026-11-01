@@ -12,7 +12,7 @@ namespace Skyforge.Game
         // Screen
         /// <summary>Plain black space.</summary>
         public static readonly Color Clear = Color.black;
-        public static readonly Color PanelBg = new Color(0.03f, 0.04f, 0.06f, 0.92f);
+        public static readonly Color PanelBg = new Color(0.02f, 0.045f, 0.075f, 0.9f);
 
         // Player ship: "faceted alloy" (Rob's pick, the Kestrel concept). Light matte alloy hull,
         // brighter panels, dark graphite nacelles, teal canopy, small peach wingtip accents.
@@ -67,12 +67,12 @@ namespace Skyforge.Game
         public static readonly Color Star = new Color(0.78f, 0.84f, 1f);
 
         // HUD
-        public static readonly Color HudText = new Color(0.82f, 0.9f, 0.95f);
-        public static readonly Color HudDim = new Color(0.45f, 0.53f, 0.6f);
-        public static readonly Color HudAccent = new Color(0.4f, 0.9f, 1f);
+        public static readonly Color HudText = new Color(0.86f, 0.91f, 0.96f);
+        public static readonly Color HudDim = new Color(0.47f, 0.56f, 0.64f);
+        public static readonly Color HudAccent = new Color(0.16f, 0.78f, 1f);
         public static readonly Color HudHull = new Color(0.86f, 0.9f, 0.95f);
-        public static readonly Color HudDanger = new Color(1f, 0.35f, 0.3f);
-        public static readonly Color HudGold = new Color(1f, 0.8f, 0.35f);
-        public static readonly Color HudBarBg = new Color(1f, 1f, 1f, 0.1f);
+        public static readonly Color HudDanger = new Color(1f, 0.31f, 0.38f);
+        public static readonly Color HudGold = new Color(1f, 0.71f, 0.24f);
+        public static readonly Color HudBarBg = new Color(0.06f, 0.11f, 0.16f, 1f);
     }
 }

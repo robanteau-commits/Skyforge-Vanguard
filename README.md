@@ -6,7 +6,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M5, sound, settings and builds for Windows, web and Android (v0.7.0)
+- **Status:** v1 milestones done; menus redesigned around the title key art (v0.8.0)
 - **Building:** [docs/BUILDING.md](docs/BUILDING.md) (Windows installer as `.exe` or `.msi`, web, Android)
 
 ## Opening the project
@@ -14,6 +14,13 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 2. Unity Hub → **Projects** → **Add** → **Add project from disk** → choose
    `D:\Games\SkyforgeVanguard`. The first open takes a few minutes while Unity builds its cache.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
+
+## What's new in v0.8.0 — the menu redesign
+- The title screen is Rob's key art, with live menu buttons laid over the painted ones (mouse,
+  arrow keys / W-S / d-pad, Enter / gamepad A).
+- Every other screen (map, hangar, results, pause, settings, credits, flight HUD) is restyled to
+  match: Orbitron and Rajdhani fonts, cyan-on-navy framed panels, chamfered buttons, corner
+  brackets and status text, the key art behind the side panels.
 
 ## What's in M5 — sound, settings and builds
 - **Sound:** every effect and the music are synthesised in code as the game starts: a sound for

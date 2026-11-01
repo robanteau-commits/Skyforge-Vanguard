@@ -73,8 +73,14 @@ stages, enemies or art.
   gains and minimum gaps), `Music` (16-bar synthwave loops per track) — all three plain C#, so they
   can be rendered to WAV under .NET for a listen — and `AudioDirector` (turns SimEvents into
   sounds, beam hum, cross-faded music). `GameSettings` holds the player settings (PlayerPrefs
-  `skyforge.settings.v1`). `Hud.Menus.cs`: title, pause menu, settings and credits panels, touch
-  buttons (their screen rects go to `PlayerControls.CoreButton` / `PauseButton`).
+  `skyforge.settings.v1`). `Hud.Menus.cs`: title (Rob's key art `Resources/UI/TitleKeyArt.png`, 1920×1080, with live
+  buttons over the painted ones at `ArtButtonX/Y`), pause menu, settings / credits / how-to-play
+  panels, touch buttons (their screen rects go to `PlayerControls.CoreButton` / `PauseButton`).
+  `Hud.Style.cs` is the look every screen uses: fonts from `Resources/Fonts` (Orbitron, Rajdhani;
+  OFL licences in docs/licenses), generated chamfer/gradient textures, `Tracked` letter-spaced
+  text, `Glow`, `PanelBox`, `MenuButton`, `BigButton`, `GhostButton`, `Segmented`, `Chip`,
+  `Frame` (corner brackets and status text; `[text]` is drawn cyan). Use these, not raw
+  `GUI.Button` with default styles, for anything new.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
   `Editor/SkyforgeBuild.cs` — the **Skyforge → Build** menu (Windows, WebGL, Android APK / AAB) and
   a pre-build hook that applies each platform's settings. `Installer/` — the Inno Setup script (`.exe`) and the WiX v5 source for the MSI

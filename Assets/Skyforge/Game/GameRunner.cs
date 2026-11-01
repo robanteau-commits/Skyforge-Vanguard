@@ -339,7 +339,7 @@ namespace Skyforge.Game
             }
             else if (InTitle)
             {
-                if (PlayerControls.LaunchPressed()) OpenMap();
+                // The title's menu reads its own keys (Hud.MenuKeys).
             }
             else if (InMap)
             {

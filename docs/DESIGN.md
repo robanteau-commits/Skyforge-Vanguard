@@ -332,6 +332,13 @@ port stays possible.
 - URP bloom on emissive materials only; a little fog and parallax on the scrolling ground; simple
   particle sparks, explosions and debris chunks.
 - **Readability rule:** nothing in the background may be as bright or saturated as enemy bullets.
+- **Menus and HUD (Rob's call, v0.8.0):** styled after Rob's title key art
+  (`Resources/UI/TitleKeyArt.png`), which *is* the title screen: live buttons sit exactly over the
+  four painted ones, and the real build number replaces the painted one. Everything else follows
+  it: Orbitron (titles, numbers) and Rajdhani (letter-spaced labels and buttons), cyan on deep
+  navy, chamfered buttons with a cyan edge strip and a gradient fill when selected, framed panels
+  with a header strip, corner brackets and small status text round the screen, and the key art
+  darkened behind the side panels. Menus work with the arrow keys / W-S / d-pad and Enter / A.
 
 ### 10.2 Audio
 - **Sound effects** synthesized in code at startup (sfxr-style: shots per weapon type, hits,

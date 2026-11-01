@@ -14,9 +14,6 @@ namespace Skyforge.Game
         public const float ResultsDelay = 1.5f;
 
         GameRunner _runner;
-        GUIStyle _title, _label, _value, _combo, _small, _centre, _hint, _resultLine, _resultValue, _gold;
-        GUIStyle _button, _buttonOn, _buttonView, _buttonLocked, _buttonDanger, _bigButton, _body, _heading;
-        float _styleScale = -1f;
         float _fps, _fpsTimer;
         int _fpsFrames;
 
@@ -24,6 +21,7 @@ namespace Skyforge.Game
 
         void Update()
         {
+            if (_runner != null) MenuKeys();
             _fpsFrames++;
             _fpsTimer += Time.unscaledDeltaTime;
             if (_fpsTimer >= 0.5f)
@@ -32,68 +30,6 @@ namespace Skyforge.Game
                 _fpsFrames = 0;
                 _fpsTimer = 0f;
             }
-        }
-
-        void Styles(float scale)
-        {
-            if (Mathf.Abs(scale - _styleScale) < 0.01f && _title != null) return;
-            _styleScale = scale;
-            GUIStyle S(int size, Color c, FontStyle f = FontStyle.Normal, TextAnchor a = TextAnchor.UpperLeft) =>
-                new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = Mathf.Max(9, Mathf.RoundToInt(size * scale)),
-                    fontStyle = f,
-                    alignment = a,
-                    wordWrap = true,
-                    normal = { textColor = c },
-                };
-            _title = S(26, Palette.HudAccent, FontStyle.Bold);
-            _label = S(15, Palette.HudDim);
-            _value = S(30, Palette.HudText, FontStyle.Bold);
-            _combo = S(24, Palette.HudAccent, FontStyle.Bold);
-            _gold = S(24, Palette.HudGold, FontStyle.Bold);
-            _small = S(14, Palette.HudDim);
-            _centre = S(34, Palette.HudText, FontStyle.Bold, TextAnchor.MiddleCenter);
-            _hint = S(16, Palette.HudDim, FontStyle.Normal, TextAnchor.UpperCenter);
-            _resultLine = S(18, Palette.HudDim, FontStyle.Normal, TextAnchor.MiddleLeft);
-            _resultValue = S(20, Palette.HudText, FontStyle.Bold, TextAnchor.MiddleRight);
-            _body = S(15, Palette.HudText);
-            _heading = S(22, Palette.HudText, FontStyle.Bold);
-            _button = ButtonStyle(15, scale, new Color(0.09f, 0.11f, 0.15f), new Color(0.14f, 0.17f, 0.23f), Palette.HudText);
-            _buttonOn = ButtonStyle(15, scale, new Color(0.07f, 0.3f, 0.38f), new Color(0.09f, 0.36f, 0.45f), Color.white);
-            _buttonView = ButtonStyle(15, scale, new Color(0.12f, 0.17f, 0.24f), new Color(0.16f, 0.22f, 0.3f), Color.white);
-            _buttonLocked = ButtonStyle(15, scale, new Color(0.06f, 0.07f, 0.09f), new Color(0.08f, 0.09f, 0.12f), Palette.HudDim);
-            _buttonDanger = ButtonStyle(15, scale, new Color(0.4f, 0.09f, 0.08f), new Color(0.52f, 0.12f, 0.1f), Color.white);
-            _bigButton = ButtonStyle(22, scale, new Color(0.1f, 0.55f, 0.68f), new Color(0.15f, 0.65f, 0.8f), Color.white);
-            _bigButton.fontStyle = FontStyle.Bold;
-            _bigButton.alignment = TextAnchor.MiddleCenter;
-        }
-
-        static readonly System.Collections.Generic.Dictionary<Color, Texture2D> Swatches = new System.Collections.Generic.Dictionary<Color, Texture2D>();
-
-        static Texture2D Swatch(Color c)
-        {
-            if (Swatches.TryGetValue(c, out var t) && t != null) return t;
-            t = new Texture2D(1, 1) { hideFlags = HideFlags.DontSave };
-            t.SetPixel(0, 0, c);
-            t.Apply();
-            Swatches[c] = t;
-            return t;
-        }
-
-        static GUIStyle ButtonStyle(int size, float scale, Color bg, Color hover, Color text)
-        {
-            return new GUIStyle(GUI.skin.button)
-            {
-                fontSize = Mathf.Max(9, Mathf.RoundToInt(size * scale)),
-                alignment = TextAnchor.MiddleLeft,
-                wordWrap = true,
-                padding = new RectOffset(Mathf.RoundToInt(10 * scale), Mathf.RoundToInt(8 * scale), Mathf.RoundToInt(4 * scale), Mathf.RoundToInt(4 * scale)),
-                normal = { background = Swatch(bg), textColor = text },
-                hover = { background = Swatch(hover), textColor = text },
-                active = { background = Swatch(hover), textColor = Color.white },
-                focused = { background = Swatch(bg), textColor = text },
-            };
         }
 
         void OnGUI()
@@ -126,12 +62,11 @@ namespace Skyforge.Game
         {
             if (panels)
             {
-                float sideW = field.x;
-                DrawRect(new Rect(0f, 0f, sideW, Screen.height), Palette.PanelBg);
-                DrawRect(new Rect(field.xMax, 0f, Screen.width - field.xMax, Screen.height), Palette.PanelBg);
-                float pad = 24f * scale;
-                LeftPanel(new Rect(pad, pad, sideW - pad * 2f, Screen.height - pad * 2f), sim, scale);
-                RightPanel(new Rect(field.xMax + pad, pad, Screen.width - field.xMax - pad * 2f, Screen.height - pad * 2f), scale);
+                ArtBehindPanels(field, 0.16f);
+                float m = 52f * scale, top = 56f * scale;
+                LeftPanel(new Rect(m, top, field.x - m - 44f * scale, Screen.height - top - 50f * scale), sim, scale);
+                RightPanel(new Rect(field.xMax + 44f * scale, top, Screen.width - field.xMax - m - 44f * scale, Screen.height - top - 50f * scale), sim, scale);
+                Frame(scale, null, null, null, null);
             }
             else
             {
@@ -148,90 +83,147 @@ namespace Skyforge.Game
                 PauseMenu(field, scale);
         }
 
-        // ------------------------------------------------------------------ panels
+        // ------------------------------------------------------------------ flight panels
 
         void LeftPanel(Rect r, StageSim sim, float s)
         {
             float y = r.y;
-            Line(ref y, r, "SKYFORGE\nVANGUARD", _title, 72f * s);
-            y += 8f * s;
-            Line(ref y, r, StageTitle(sim), _small, 22f * s);
-            Bar(ref y, r, sim.Progress, Palette.HudDim, 6f * s, s);
-            y += 16f * s;
+            Glow(new Rect(r.x, y, r.width, 36f * s), "SKYFORGE", new GUIStyle(_title) { fontSize = Mathf.RoundToInt(30 * s) }, Cyan, Cyan, 2f * s);
+            y += 34f * s;
+            GUI.Label(new Rect(r.x, y, r.width, 36f * s), "VANGUARD", new GUIStyle(_heading) { fontSize = Mathf.RoundToInt(30 * s) });
+            y += 46f * s;
+            DrawRect(new Rect(r.x, y, 70f * s, 4f * s), Cyan);
+            y += 22f * s;
+            FrameTag(new Rect(r.x, y, r.width, 22f * s), StageTag(sim), s, TextAnchor.MiddleLeft);
+            y += 30f * s;
+            StatBar(new Rect(r.x, y, r.width, 4f * s), sim.Progress, Cyan);
+            y += 34f * s;
 
-            Line(ref y, r, "SCORE", _label, 22f * s);
-            Line(ref y, r, sim.Score.ToString("N0"), _value, 42f * s);
-            Line(ref y, r, "COMBO", _label, 22f * s);
-            Line(ref y, r, "×" + sim.Combo.ToString("0.0"), _combo, 36f * s);
-            Line(ref y, r, "CREDITS", _label, 22f * s);
-            Line(ref y, r, sim.Credits.ToString("N0"), _gold, 36f * s);
-            Line(ref y, r, "KILLS", _label, 22f * s);
-            Line(ref y, r, sim.Kills + (sim.Spawned > 0 ? "   (" + sim.KillPercent + "%)" : ""), _value, 42f * s);
-            y += 12f * s;
+            Lbl(new Rect(r.x, y, r.width, 22f * s), "Score", s);
+            y += 24f * s;
+            GUI.Label(new Rect(r.x, y, r.width, 56f * s), sim.Score.ToString("N0"), new GUIStyle(_value) { fontSize = Mathf.RoundToInt(44 * s) });
+            y += 64f * s;
+
+            float half = (r.width - 14f * s) * 0.5f, bh = 78f * s;
+            var combo = new Rect(r.x, y, half, bh);
+            var cred = new Rect(r.x + half + 14f * s, y, half, bh);
+            Outline(combo, new Color(0.16f, 0.78f, 1f, 0.3f));
+            Outline(cred, new Color(1f, 0.71f, 0.24f, 0.4f));
+            Lbl(new Rect(combo.x + 14f * s, combo.y + 8f * s, half, 20f * s), "Combo", s);
+            GUI.Label(new Rect(combo.x + 14f * s, combo.y + 32f * s, half, 40f * s), "×" + sim.Combo.ToString("0.0"), _combo);
+            Lbl(new Rect(cred.x + 14f * s, cred.y + 8f * s, half, 20f * s), "Credits", s);
+            GUI.Label(new Rect(cred.x + 14f * s, cred.y + 32f * s, half, 40f * s), sim.Credits.ToString("N0"), _gold);
+            y += bh + 22f * s;
 
             var p = sim.Player;
-            Line(ref y, r, "SHIELD  " + Mathf.CeilToInt(p.Shield) + " / " + Mathf.RoundToInt(p.MaxShield), _label, 22f * s);
-            Bar(ref y, r, p.Shield / p.MaxShield, Palette.HudAccent, 12f * s, s);
-            y += 8f * s;
-            Line(ref y, r, "HULL  " + Mathf.CeilToInt(p.Hull) + " / " + Mathf.RoundToInt(p.MaxHull), _label, 22f * s);
-            Bar(ref y, r, p.Hull / p.MaxHull, p.Hull < p.MaxHull * 0.3f ? Palette.HudDanger : Palette.HudHull, 12f * s, s);
-            y += 8f * s;
+            Meter(ref y, r, s, "Shield", Mathf.CeilToInt(p.Shield) + " / " + Mathf.RoundToInt(p.MaxShield), p.Shield / p.MaxShield, Cyan, Palette.HudText);
+            bool low = p.Hull < p.MaxHull * 0.3f;
+            Meter(ref y, r, s, "Hull", Mathf.CeilToInt(p.Hull) + " / " + Mathf.RoundToInt(p.MaxHull), p.Hull / p.MaxHull, low ? Palette.HudDanger : Palette.HudHull, low ? Palette.HudDanger : Palette.HudText);
             CoreMeter(ref y, r, sim, s);
-            y += 16f * s;
+            y += 12f * s;
 
-            Line(ref y, r, "LOADOUT", _label, 22f * s);
-            Line(ref y, r, "Wings  " + Describe(sim.Loadout.LeftWing) + (Same(sim.Loadout) ? "" : " / " + Describe(sim.Loadout.RightWing)), _small, 22f * s);
-            Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)), _small, 22f * s);
+            Lbl(new Rect(r.x, y, r.width, 22f * s), "Kills", s);
+            Tracked(new Rect(r.x, y, r.width, 22f * s), sim.Kills + (sim.Spawned > 0 ? "   " + sim.KillPercent + "%" : ""), _tButton, 2f * s, Palette.HudText, TextAnchor.MiddleRight);
+            y += 34f * s;
+            Lbl(new Rect(r.x, y, r.width, 22f * s), "Loadout", s);
+            y += 26f * s;
+            GUI.Label(new Rect(r.x, y, r.width, 24f * s), "Wings  <color=#dbe8f4>" + Describe(sim.Loadout.LeftWing) + (Same(sim.Loadout) ? "" : " / " + Describe(sim.Loadout.RightWing)) + "</color>", _small);
+            y += 24f * s;
+            GUI.Label(new Rect(r.x, y, r.width, 24f * s), "Core  <color=#dbe8f4>" + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)) + "</color>", _small);
 
-            var foot = new Rect(r.x, r.yMax - 44f * s, r.width, 44f * s);
-            GUI.Label(foot, "v" + Application.version + (GameSettings.ShowFps ? "\n" + Mathf.RoundToInt(_fps) + " fps" : ""), _small);
+            Lbl(new Rect(r.x, r.yMax - 22f * s, r.width, 22f * s), "Build " + Application.version + (GameSettings.ShowFps ? "   •   " + Mathf.RoundToInt(_fps) + " fps" : ""), s);
         }
 
-        void RightPanel(Rect r, float s)
+        /// <summary>A labelled bar: "SHIELD ........ 40 / 40" over a thick bar.</summary>
+        void Meter(ref float y, Rect r, float s, string label, string value, float fraction, Color fill, Color valueColour)
+        {
+            Lbl(new Rect(r.x, y, r.width, 20f * s), label, s);
+            Tracked(new Rect(r.x, y, r.width, 20f * s), value, _tLabel, 2.5f * s, valueColour, TextAnchor.MiddleRight);
+            y += 26f * s;
+            StatBar(new Rect(r.x, y, r.width, 12f * s), fraction, fill);
+            y += 26f * s;
+        }
+
+        /// <summary>The core's charge, or the time left on its effect, and READY when it can fire.</summary>
+        void CoreMeter(ref float y, Rect r, StageSim sim, float s)
+        {
+            if (sim.CoreWeapon == null) return;
+            var p = sim.Player;
+            string value;
+            float fill;
+            Color colour, valueColour = Cyan;
+            if (p.CoreActive)
+            {
+                value = Mathf.CeilToInt(p.CoreTimer) + "s";
+                fill = p.CoreTimer / Mathf.Max(0.01f, sim.CoreStats.Duration);
+                colour = Color.white;
+                valueColour = Color.white;
+            }
+            else if (p.CoreReady)
+            {
+                bool blink = Mathf.FloorToInt(Time.unscaledTime * 3f) % 2 == 0;
+                value = _runner.Controls.UsingTouch ? "READY" : "READY · SPACE";
+                fill = 1f;
+                colour = blink ? new Color(0.6f, 0.92f, 1f) : Cyan;
+            }
+            else
+            {
+                value = Mathf.FloorToInt(p.CoreCharge) + "%";
+                fill = p.CoreCharge / PlayerShip.CoreChargeMax;
+                colour = new Color(0.04f, 0.5f, 0.7f);
+                valueColour = Palette.HudText;
+            }
+            Meter(ref y, r, s, "Core · " + sim.CoreWeapon.Name, value, fill, colour, valueColour);
+        }
+
+        void RightPanel(Rect r, StageSim sim, float s)
         {
             float y = r.y;
-            Line(ref y, r, "CONTROLS", _label, 26f * s);
-            Line(ref y, r,
-                "Mouse — the ship follows the cursor\n" +
-                "WASD / arrows — fly\n" +
-                "Shift or right mouse — precision (half speed)\n" +
-                "Gamepad — left stick, LT precision\n" +
-                "Touch — drag anywhere\n\n" +
-                "Space, left click, gamepad A or a second finger — fire the core when it's charged\n\n" +
-                "Wings fire automatically. Dodge the orange bullets; a red glow means an enemy is about to fire. " +
-                "Your shield takes hits first and recharges; hull damage resets the combo. Fly near gold shards to collect them.\n\n" +
-                "Esc / P / Start — pause menu\n" +
-                "H — hangar · M — map · R — restart\n" +
-                "6 / 7 / 8 — fly 1-1 / Armada Sampler / practice", _small, 440f * s);
+            Lbl(new Rect(r.x, y, r.width, 22f * s), "Flight controls", s, Cyan);
+            y += 36f * s;
+            var rows = new[]
+            {
+                ("Mouse", "Ship follows the cursor"), ("WASD", "Fly"), ("Shift", "Precision (half speed)"),
+                ("Space", "Fire the core when charged"), ("Gamepad", "Stick, LT precision, A core"),
+                ("Esc", "Pause menu"), ("R", "Restart"), ("H / M", "Hangar / map"),
+            };
+            foreach (var (key, what) in rows)
+            {
+                Tracked(new Rect(r.x, y, 130f * s, 28f * s), key.ToUpperInvariant(), _tButton, 2.2f * s, Palette.HudText);
+                GUI.Label(new Rect(r.x + 130f * s, y + 3f * s, r.width - 130f * s, 28f * s), what, _small);
+                y += 32f * s;
+            }
+            y += 26f * s;
+            Lbl(new Rect(r.x, y, r.width, 22f * s), "Field guide", s, Cyan);
+            y += 32f * s;
+            GUI.Label(new Rect(r.x, y, r.width, 200f * s),
+                "Wings fire on their own. Dodge the orange bullets: a red glow means an enemy is about to fire. " +
+                "Your shield takes hits first and recharges; hull damage resets the combo. Fly near gold shards to collect them.", _small);
+
+            if (sim.Veteran)
+                Tracked(new Rect(r.x, r.yMax - 22f * s, r.width, 22f * s), "VETERAN", _tLabel, 3.4f * s, Palette.HudDanger, TextAnchor.MiddleRight);
         }
+
+        string StageTag(StageSim sim) =>
+            sim.Stage == null ? "[Practice] flight" : sim.Stage.Id == "sampler" ? "[Test]  //  " + sim.Stage.Name
+            : "[" + (sim.Stage.Id == "1-B" ? "Boss" : "Stage 0" + sim.Stage.Id) + "]  //  " + sim.Stage.Name;
 
         void Overlay(Rect field, StageSim sim, float s)
         {
             float pad = 10f * s;
             float w = field.width - pad * 2f;
-            var top = new Rect(field.x + pad, field.y + pad, w, 30f * s);
+            var top = new Rect(field.x + pad, field.y + pad, w, 34f * s);
             GUI.Label(top, sim.Score.ToString("N0"), _value);
             var comboStyle = new GUIStyle(_combo) { alignment = TextAnchor.UpperRight };
-            GUI.Label(top, "×" + sim.Combo.ToString("0.0"), comboStyle);
-            if (sim.CoreWeapon != null)
-            {
-                var core = new Rect(field.x + pad, top.yMax + 4f * s, w, 24f * s);
-                var coreStyle = new GUIStyle(_small) { alignment = TextAnchor.UpperRight };
-                string text = sim.Player.CoreActive ? sim.CoreWeapon.Name + " " + Mathf.CeilToInt(sim.Player.CoreTimer) + "s"
-                    : sim.Player.CoreReady ? "CORE READY: tap with a second finger" : "core " + Mathf.FloorToInt(sim.Player.CoreCharge) + "%";
-                GUI.Label(core, text, coreStyle);
-            }
-            var credits = new Rect(field.x + pad, top.yMax + 4f * s, w, 24f * s);
-            GUI.Label(credits, "CR " + sim.Credits, new GUIStyle(_gold) { fontSize = Mathf.RoundToInt(18 * s) });
+            GUI.Label(new Rect(top.x, top.y, top.width - 50f * s, top.height), "×" + sim.Combo.ToString("0.0"), comboStyle);
+            Tracked(new Rect(field.x + pad, top.yMax + 6f * s, w, 22f * s), sim.Credits.ToString("N0") + " CR", _tLabel, 2.5f * s, Palette.HudGold);
 
             // Bars along the bottom edge.
             var p = sim.Player;
             float barH = 8f * s;
             float y = field.yMax - pad - barH * 2f - 6f * s;
-            var row = new Rect(field.x + pad, y, w, 0f);
-            Bar(ref y, row, p.Shield / p.MaxShield, Palette.HudAccent, barH, s);
-            y += 4f * s;
-            Bar(ref y, row, p.Hull / p.MaxHull, p.Hull < p.MaxHull * 0.3f ? Palette.HudDanger : Palette.HudHull, barH, s);
+            StatBar(new Rect(field.x + pad, y, w, barH), p.Shield / p.MaxShield, Cyan);
+            StatBar(new Rect(field.x + pad, y + barH + 4f * s, w, barH), p.Hull / p.MaxHull, p.Hull < p.MaxHull * 0.3f ? Palette.HudDanger : Palette.HudHull);
         }
 
         /// <summary>The boss's name and health along the top of the field.</summary>
@@ -239,105 +231,95 @@ namespace Skyforge.Game
         {
             var boss = sim.Boss;
             if (boss == null || sim.Status != StageStatus.Playing || boss.Pos.Y > Field.HalfHeight + 2f) return;
-            float pad = 14f * s;
-            float y = field.y + (panels ? pad : 64f * s);
-            var r = new Rect(field.x + pad * 2f, y, field.width - pad * 4f, 0f);
-            var name = new GUIStyle(_label) { alignment = TextAnchor.UpperCenter, fontStyle = FontStyle.Bold, normal = { textColor = Palette.HudDanger } };
-            string phase = boss.Kind == EnemyKind.Tidebreaker && boss.Mode >= 1 ? "   ·   PHASE " + boss.Mode : "";
-            GUI.Label(new Rect(r.x, y, r.width, 22f * s), boss.Def.Name.ToUpperInvariant() + phase, name);
-            y += 22f * s;
-            Bar(ref y, r, sim.BossHealth(boss), Palette.HudDanger, 10f * s, s);
+            float pad = 18f * s;
+            float y = field.y + (panels ? pad : 72f * s);
+            var r = new Rect(field.x + pad * 2f, y, field.width - pad * 4f, 26f * s);
+            string phase = boss.Kind == EnemyKind.Tidebreaker && boss.Mode >= 1 ? "PHASE " + boss.Mode : "";
+            Tracked(r, boss.Def.Name.ToUpperInvariant(), _tButton, 4f * s, Palette.HudDanger);
+            if (phase.Length > 0) Tracked(r, phase, _tLabel, 3f * s, new Color(1f, 0.6f, 0.65f), TextAnchor.MiddleRight);
+            var bar = new Rect(r.x, r.yMax + 4f * s, r.width, 10f * s);
+            StatBar(bar, sim.BossHealth(boss), Palette.HudDanger);
+            Outline(new Rect(bar.x - 1f, bar.y - 1f, bar.width + 2f, bar.height + 2f), new Color(1f, 0.31f, 0.38f, 0.5f));
         }
 
         // ------------------------------------------------------------------ results
 
         void Results(Rect field, StageSim sim, float s)
         {
-            DrawRect(field, new Color(0f, 0f, 0f, 0.7f));
+            DrawRect(field, new Color(0f, 0.01f, 0.03f, 0.72f));
             bool cleared = sim.Status == StageStatus.Cleared;
-            float w = Mathf.Min(field.width - 32f * s, 420f * s);
-            float x = field.center.x - w * 0.5f;
-            float y = field.y + field.height * 0.24f;
-
-            var head = new GUIStyle(_centre) { normal = { textColor = cleared ? Palette.HudAccent : Palette.HudDanger } };
-            GUI.Label(new Rect(field.x, y, field.width, 50f * s), cleared ? "STAGE CLEAR" : "SHIP DESTROYED", head);
-            y += 50f * s;
-            GUI.Label(new Rect(field.x, y, field.width, 28f * s), StageTitle(sim), _hint);
-            y += 50f * s;
-
-            ResultRow(ref y, x, w, s, "Score", sim.Score.ToString("N0"));
-            ResultRow(ref y, x, w, s, "Enemies destroyed", sim.Spawned > 0 ? sim.KillPercent + "%" : sim.Kills.ToString());
-            ResultRow(ref y, x, w, s, "Hull damage", sim.HullDamageTaken <= 0f ? "none" : Mathf.CeilToInt(sim.HullDamageTaken).ToString());
             var res = _runner.LastResult;
-            ResultRow(ref y, x, w, s, cleared ? "Credits" : "Credits kept (half)", sim.CreditsBanked.ToString("N0"));
-            if (res != null)
-            {
-                if (cleared && sim.Stage != null)
-                {
-                    MedalResult(ref y, x, w, s, "Ace", res.Ace, res.NewAce, sim.Stage.MedalBonus[0]);
-                    MedalResult(ref y, x, w, s, "Untouched", res.Untouched, res.NewUntouched, sim.Stage.MedalBonus[1]);
-                    MedalResult(ref y, x, w, s, "Purge", res.Purge, res.NewPurge, sim.Stage.MedalBonus[2]);
-                }
-                ResultRow(ref y, x, w, s, "Total credits", res.TotalCredits.ToString("N0"));
-                string news = (res.NewBest ? "New best score! " : "") + (res.UnlockedStageId != null ? "Stage " + res.UnlockedStageId + " unlocked. " : "")
-                    + (res.UnlockedVeteran ? "VETERAN mode unlocked!" : "");
-                if (news.Length > 0) { GUI.Label(new Rect(field.x, y, field.width, 26f * s), news, new GUIStyle(_hint) { normal = { textColor = Palette.HudGold } }); y += 26f * s; }
-            }
-            else if (_runner.Sandbox || sim.Stage == null || sim.Stage == Stages.ArmadaSampler)
-            {
-                GUI.Label(new Rect(field.x, y, field.width, 26f * s), "Test flight: nothing is saved.", _hint);
-                y += 26f * s;
-            }
-            y += 18f * s;
+            bool medals = res != null && cleared && sim.Stage != null;
+            float w = Mathf.Min(field.width - 24f * s, 560f * s);
+            float h = (medals ? 760f : 600f) * s;
+            var box = new Rect(field.center.x - w * 0.5f, Mathf.Max(field.y + 12f * s, field.center.y - h * 0.5f), w, Mathf.Min(h, field.height - 24f * s));
+            var inner = PanelBox(box, s, "Mission report", sim.Stage == null ? "Practice" : StageCode(sim) + "  //  " + sim.Stage.Name);
+            float y = inner.y;
+            var headColour = cleared ? Cyan : Palette.HudDanger;
+            Glow(new Rect(inner.x, y, inner.width, 60f * s), cleared ? "STAGE CLEAR" : "SHIP DOWN",
+                new GUIStyle(_centre) { fontSize = Mathf.RoundToInt(46 * s) }, headColour, headColour, 3f * s);
+            y += 68f * s;
+            DrawRect(new Rect(inner.center.x - 45f * s, y, 90f * s, 4f * s), headColour);
+            y += 26f * s;
 
-            float bh = 48f * s, gap = 10f * s;
-            if (GUI.Button(new Rect(x, y, w, bh), "CONTINUE", _bigButton)) _runner.OpenMap();
-            y += bh + gap;
-            float bw = (w - gap) * 0.5f;
-            if (GUI.Button(new Rect(x, y, bw, 40f * s), "FLY AGAIN", _buttonOn)) _runner.Launch();
-            if (GUI.Button(new Rect(x + bw + gap, y, bw, 40f * s), "HANGAR", _buttonOn)) _runner.OpenHangar();
-            y += 48f * s;
+            ResultRow(ref y, inner, s, "Score", sim.Score.ToString("N0"), Palette.HudText);
+            ResultRow(ref y, inner, s, "Enemies destroyed", sim.Spawned > 0 ? sim.KillPercent + "%" : sim.Kills.ToString(), Palette.HudText);
+            ResultRow(ref y, inner, s, "Hull damage", sim.HullDamageTaken <= 0f ? "NONE" : Mathf.CeilToInt(sim.HullDamageTaken).ToString(), Palette.HudText);
+            ResultRow(ref y, inner, s, cleared ? "Credits banked" : "Credits kept (half)", sim.CreditsBanked.ToString("N0"), Palette.HudGold);
+            if (res != null) ResultRow(ref y, inner, s, "Total credits", res.TotalCredits.ToString("N0"), Palette.HudGold);
+            y += 10f * s;
+
+            if (medals)
+            {
+                float gap = 12f * s, mw = (inner.width - gap * 2f) / 3f, mh = 96f * s;
+                MedalTile(new Rect(inner.x, y, mw, mh), s, "Ace", res.Ace, res.NewAce, sim.Stage.MedalBonus[0], "Score " + Progress.AceScore(sim.Stage, sim.Veteran).ToString("N0"));
+                MedalTile(new Rect(inner.x + mw + gap, y, mw, mh), s, "Untouched", res.Untouched, res.NewUntouched, sim.Stage.MedalBonus[1], "No hull damage");
+                MedalTile(new Rect(inner.x + (mw + gap) * 2f, y, mw, mh), s, "Purge", res.Purge, res.NewPurge, sim.Stage.MedalBonus[2], Stages.PurgePercent + "% needed");
+                y += mh + 16f * s;
+            }
+            string news = res == null ? (_runner.Sandbox || sim.Stage == null || sim.Stage == Stages.ArmadaSampler ? "Test flight: nothing is saved" : "")
+                : (res.NewBest ? "New best score   " : "") + (res.UnlockedStageId != null ? "Stage " + res.UnlockedStageId + " unlocked   " : "") + (res.UnlockedVeteran ? "Veteran unlocked" : "");
+            if (news.Length > 0)
+                Tracked(new Rect(inner.x, y, inner.width, 24f * s), news.Trim().ToUpperInvariant(), _tLabel, 2.6f * s, res == null ? Palette.HudDim : Palette.HudGold, TextAnchor.MiddleCenter);
+
+            float bh = 62f * s, gh = 50f * s;
+            float by = inner.yMax - bh - 12f * s - gh;
+            if (BigButton(new Rect(inner.x, by, inner.width, bh), "Continue  ›", s)) _runner.OpenMap();
+            float bw = (inner.width - 12f * s) * 0.5f;
+            if (GhostButton(new Rect(inner.x, by + bh + 12f * s, bw, gh), "Fly again", s)) _runner.Launch();
+            if (GhostButton(new Rect(inner.x + bw + 12f * s, by + bh + 12f * s, bw, gh), "Hangar", s)) _runner.OpenHangar();
             if (!_runner.Controls.UsingTouch)
-                GUI.Label(new Rect(field.x, y, field.width, 30f * s), "Enter: continue · R: fly again · H: hangar", _hint);
+                Tracked(new Rect(box.x, box.yMax + 8f * s, box.width, 22f * s), "ENTER  CONTINUE   •   R  FLY AGAIN   •   H  HANGAR", _tTag, 2.6f * s, Palette.HudDim, TextAnchor.MiddleCenter);
         }
 
-        void MedalResult(ref float y, float x, float w, float s, string name, bool earned, bool isNew, int bonus)
+        void ResultRow(ref float y, Rect r, float s, string label, string value, Color valueColour)
         {
-            string v = !earned ? "—" : isNew ? "NEW  +" + bonus + " cr" : "earned";
-            var r = new Rect(x, y, w, 30f * s);
-            GUI.Label(r, "Medal: " + name, _resultLine);
-            GUI.Label(r, v, earned ? new GUIStyle(_resultValue) { normal = { textColor = Palette.HudGold } } : _resultValue);
-            y += 32f * s;
+            var row = new Rect(r.x, y, r.width, 36f * s);
+            Lbl(row, label, s);
+            var st = new GUIStyle(_resultValue) { normal = { textColor = valueColour } };
+            GUI.Label(row, value, st);
+            DrawRect(new Rect(r.x, row.yMax, r.width, 1f), new Color(0.16f, 0.62f, 0.85f, 0.18f));
+            y += 42f * s;
         }
 
-        void ResultRow(ref float y, float x, float w, float s, string label, string value)
+        void MedalTile(Rect r, float s, string name, bool earned, bool isNew, int bonus, string rule)
         {
-            var r = new Rect(x, y, w, 34f * s);
-            DrawRect(new Rect(x, r.yMax - 1f, w, 1f), Palette.HudBarBg);
-            GUI.Label(r, label, _resultLine);
-            GUI.Label(r, value, _resultValue);
-            y += 38f * s;
+            var gold = Palette.HudGold;
+            DrawRect(r, earned ? new Color(1f, 0.71f, 0.24f, 0.08f) : new Color(0f, 0.04f, 0.07f, 0.6f));
+            Outline(r, earned ? gold : new Color(0.16f, 0.62f, 0.85f, 0.25f));
+            Diamond(new Vector2(r.center.x, r.y + 24f * s), 15f * s, earned ? gold : new Color(0.2f, 0.29f, 0.35f));
+            Tracked(new Rect(r.x, r.y + 42f * s, r.width, 24f * s), name.ToUpperInvariant(), _tButton, 2.6f * s, earned ? gold : Palette.HudDim, TextAnchor.MiddleCenter);
+            string sub = !earned ? rule.ToUpperInvariant() : isNew ? "NEW  +" + bonus : "EARNED";
+            Tracked(new Rect(r.x, r.y + 68f * s, r.width, 20f * s), sub, _tLabel, 1.6f * s, earned ? gold : Palette.HudDim, TextAnchor.MiddleCenter);
         }
 
         // ------------------------------------------------------------------ helpers
-
-        static string StageTitle(StageSim sim) =>
-            (sim.Stage == null ? "Practice flight" : (sim.Stage.Id == "sampler" ? "" : "Stage " + sim.Stage.Id + " · ") + sim.Stage.Name)
-            + (sim.Veteran && sim.Stage != null ? " · VETERAN" : "");
 
         static void DrawRect(Rect r, Color c)
         {
             GUI.color = c;
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = Color.white;
-        }
-
-        static void Bar(ref float y, Rect r, float fraction, Color fill, float h, float s)
-        {
-            var back = new Rect(r.x, y, r.width, h);
-            DrawRect(back, Palette.HudBarBg);
-            DrawRect(new Rect(back.x, back.y, back.width * Mathf.Clamp01(fraction), h), fill);
-            y += h;
         }
 
         static void Line(ref float y, Rect r, string text, GUIStyle style, float h)
