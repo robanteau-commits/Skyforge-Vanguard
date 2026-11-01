@@ -74,7 +74,7 @@ namespace Skyforge.Simulation
                     for (int i = 0; i < Enemies.Count; i++)
                     {
                         var e = Enemies[i];
-                        if (!e.Dead && OnScreen(e)) DamageEnemy(e, st.Damage, e.Pos);
+                        if (!e.Gone && OnScreen(e)) DamageEnemy(e, st.Damage, e.Pos);
                     }
                     p.Invulnerable = Math.Max(p.Invulnerable, st.Duration);
                     break;
@@ -121,7 +121,7 @@ namespace Skyforge.Simulation
             for (int i = 0; i < Enemies.Count; i++)
             {
                 var e = Enemies[i];
-                if (!e.Dead && OnScreen(e) && InLance(e.Pos, e.Radius))
+                if (!e.Gone && OnScreen(e) && InLance(e.Pos, e.Radius))
                     DamageEnemy(e, st.Damage * Field.Dt, e.Pos, spark);
             }
             EnemyShots.RemoveAll(s => InLance(s.Pos, s.Radius));

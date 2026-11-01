@@ -161,6 +161,33 @@ namespace Skyforge.Simulation
         public bool Counted;
         /// <summary>Destroyed this step; removed at the end of the step.</summary>
         public bool Dead;
+
+        /// <summary>Parts (launch bays, boss parts): the enemy this one is mounted on (0 = none), and where.</summary>
+        public int ParentId;
+        public Vec2 Offset;
+        /// <summary>Takes no damage (shots still hit it and are used up): the Tidebreaker's eye before its cannons fall.</summary>
+        public bool Shielded;
+        /// <summary>Can't be hit or touched at all (the Tidebreaker's hull; only its parts can).</summary>
+        public bool Intangible;
+        /// <summary>Not there for weapons: destroyed, or intangible.</summary>
+        public bool Gone => Dead || Intangible;
+    }
+
+    /// <summary>A boss laser: a warning line first (no damage), then a beam that sweeps (docs/DESIGN.md §6.1).</summary>
+    public struct HazardBeam
+    {
+        public Vec2 Origin;
+        /// <summary>Degrees clockwise from up the screen.</summary>
+        public float Heading;
+        /// <summary>Degrees per second it turns while firing.</summary>
+        public float Sweep;
+        /// <summary>Seconds of warning left (then it fires).</summary>
+        public float Warn;
+        /// <summary>Seconds of firing left.</summary>
+        public float Fire;
+        public bool Firing => Warn <= 0f;
+        /// <summary>0..1 through the warning (the view grows the line).</summary>
+        public float WarnFraction => Warn <= 0f ? 1f : 1f - Warn / StageSim.LaserWarnTime;
     }
 
     public enum PickupKind : byte
@@ -221,6 +248,10 @@ namespace Skyforge.Simulation
         BeamPulse,
         /// <summary>A small blast went off (Pos = where, Value = radius): missiles, bomblets.</summary>
         Blast,
+        /// <summary>A boss changed phase (Value = the new phase, 1..3; EnemyId = the boss).</summary>
+        BossPhase,
+        /// <summary>A shot bounced off a shielded part.</summary>
+        Deflected,
     }
 
     /// <summary>Something that happened this step, for effects and sound. Gameplay never reads these.</summary>

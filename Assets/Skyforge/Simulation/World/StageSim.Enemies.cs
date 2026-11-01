@@ -54,6 +54,8 @@ namespace Skyforge.Simulation
                     e.Timer = 1f;
                     Events.Add(new SimEvent { Type = SimEventType.BastionSpawned, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id });
                     break;
+                case EnemyKind.BroodCarrier: InitCarrier(e, o); break;
+                case EnemyKind.Tidebreaker: InitTidebreaker(e); break;
             }
         }
 
@@ -73,6 +75,13 @@ namespace Skyforge.Simulation
                     case EnemyKind.SpineMine: UpdateMine(e); break;
                     case EnemyKind.Warden: UpdateWarden(e); break;
                     case EnemyKind.Bastion: UpdateBastion(e); break;
+                    case EnemyKind.BroodCarrier: UpdateCarrier(e); break;
+                    case EnemyKind.BroodBay: UpdateBay(e); break;
+                    case EnemyKind.Tidebreaker: UpdateTidebreaker(e); break;
+                    case EnemyKind.TideCannon: UpdateTideCannon(e); break;
+                    case EnemyKind.TideMissileBay: UpdateTideMissileBay(e); break;
+                    case EnemyKind.TideEye: UpdateTideEye(e); break;
+                    case EnemyKind.TideMissile: UpdateTideMissile(e); break;
                 }
                 if (!e.Dead) CheckContact(e);
             }
@@ -292,7 +301,7 @@ namespace Skyforge.Simulation
 
         void CheckContact(Enemy e)
         {
-            if (!Player.Alive || (Player.Invulnerable > 0f && !AegisUp)) return;
+            if (!Player.Alive || e.Intangible || (Player.Invulnerable > 0f && !AegisUp)) return;
             float r = e.Radius + PlayerShip.BodyRadius;
             if (Vec2.DistanceSq(e.Pos, Player.Pos) > r * r) return;
             HurtPlayer(e.Def.ContactDamage);

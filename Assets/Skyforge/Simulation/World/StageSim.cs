@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Skyforge.Simulation
@@ -17,6 +18,8 @@ namespace Skyforge.Simulation
         public float FieldWidth = Field.Width;
         /// <summary>Airframe upgrade levels per <see cref="AirframeStat"/> (null = stock ship).</summary>
         public int[] Airframe;
+        /// <summary>Veteran difficulty (docs/DESIGN.md §5.1): faster, denser, harder-hitting fire, tougher enemies, more reward.</summary>
+        public bool Veteran;
     }
 
     /// <summary>
@@ -40,6 +43,8 @@ namespace Skyforge.Simulation
         public readonly List<EnemyShot> EnemyShots = new List<EnemyShot>(512);
         public readonly List<Enemy> Enemies = new List<Enemy>(64);
         public readonly List<Pickup> Pickups = new List<Pickup>(128);
+        /// <summary>Boss lasers (warning lines and firing beams).</summary>
+        public readonly List<HazardBeam> Lasers = new List<HazardBeam>(4);
         /// <summary>What happened during the last step (cleared at the start of each step).</summary>
         public readonly List<SimEvent> Events = new List<SimEvent>(64);
         readonly Rng _rng;
@@ -53,6 +58,8 @@ namespace Skyforge.Simulation
         public float TimeSinceEnd { get; private set; }
         public long Score { get; private set; }
         public int Kills { get; private set; }
+        /// <summary>Kills of stage enemies (the ones in <see cref="Spawned"/>; not parts, launched Gnats or missiles).</summary>
+        public int CountedKills { get; private set; }
         /// <summary>Stage enemies spawned so far (the kill percentage is out of these).</summary>
         public int Spawned { get; private set; }
         /// <summary>Credits collected this stage.</summary>
@@ -89,7 +96,15 @@ namespace Skyforge.Simulation
         }
 
         /// <summary>Kill percentage (0..100) of the stage enemies spawned so far.</summary>
-        public int KillPercent => Spawned == 0 ? 0 : (int)(Kills * 100L / Spawned);
+        public int KillPercent => Spawned == 0 ? 0 : (int)(CountedKills * 100L / Spawned);
+
+        // Veteran multipliers (docs/DESIGN.md §5.1).
+        public const float VeteranBulletSpeed = 1.25f, VeteranDensity = 1.35f, VeteranDamage = 1.5f, VeteranHp = 1.3f,
+            VeteranCredits = 1.3f, VeteranScore = 1.5f;
+        public bool Veteran => Setup.Veteran;
+        float BulletSpeedScale => Veteran ? VeteranBulletSpeed : 1f;
+        /// <summary>Bullets in a pattern of <paramref name="n"/> (more on Veteran).</summary>
+        int Dense(int n) => Veteran ? (int)Math.Round(n * VeteranDensity) : n;
 
         /// <summary>Credits kept: all of them on a clear, half on a failed run (decided by Rob).</summary>
         public int CreditsBanked => Status == StageStatus.Failed ? Credits / 2 : Credits;
@@ -115,11 +130,13 @@ namespace Skyforge.Simulation
             if (Status == StageStatus.Playing) RunTimeline();
             if (_practice) UpdatePracticeDrones();
             UpdateEnemies();
+            UpdateLasers();
             MoveShots();
             MoveEnemyShots();
             UpdatePickups();
             UpdateCombo();
-            Enemies.RemoveAll(e => e.Dead || Outside(e.Pos, 6f));
+            // Bosses and their parts may sit off the top while they move in; parts leave with their parent.
+            Enemies.RemoveAll(e => e.Dead || (Outside(e.Pos, 6f) && e.ParentId == 0 && e.Kind != EnemyKind.Tidebreaker));
             CheckStageEnd();
         }
 
@@ -136,8 +153,8 @@ namespace Skyforge.Simulation
                 Pos = pos,
                 BaseX = pos.X,
                 StartY = pos.Y,
-                Hp = def.Hp,
-                MaxHp = def.Hp,
+                Hp = def.Hp * (Veteran ? VeteranHp : 1f),
+                MaxHp = def.Hp * (Veteran ? VeteranHp : 1f),
                 Radius = def.Radius,
                 Score = def.Score,
                 Phase = _rng.Range(0f, 6.2831853f),
@@ -152,7 +169,12 @@ namespace Skyforge.Simulation
         /// Continuous damage (beams) passes <paramref name="hitEvent"/> = false on most steps.</summary>
         bool DamageEnemy(Enemy e, float damage, Vec2 at, bool hitEvent = true)
         {
-            if (e.Dead) return false;
+            if (e.Dead || e.Intangible) return false;
+            if (e.Shielded)
+            {
+                if (hitEvent) Events.Add(new SimEvent { Type = SimEventType.Deflected, Pos = at, EnemyKind = e.Kind, EnemyId = e.Id });
+                return false;
+            }
             e.Hp -= damage;
             if (e.Hp > 0f)
             {
@@ -167,14 +189,19 @@ namespace Skyforge.Simulation
         {
             e.Dead = true;
             Kills++;
+            if (e.Counted) CountedKills++;
             long points = (long)e.Score * ComboTenths / 10;
+            if (Veteran) points = points * 3 / 2;
             Score += points;
             ComboTenths = ComboTenths + 1 > ComboMaxTenths ? ComboMaxTenths : ComboTenths + 1;
             _comboIdle = 0f;
             Events.Add(new SimEvent { Type = SimEventType.Destroyed, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id, Value = points });
             DropLoot(e);
-            ChargeCore(e.Kind == EnemyKind.Warden || e.Kind == EnemyKind.Bastion ? CoreChargePerBigKill : CoreChargePerKill);
+            ChargeCore(EnemyDefs.IsBig(e.Kind) ? CoreChargePerBigKill : CoreChargePerKill);
             if (e.Kind == EnemyKind.SpineMine) MineBurst(e);
+            // Parts go down with what they're mounted on.
+            for (int i = 0; i < Enemies.Count; i++)
+                if (Enemies[i].ParentId == e.Id && !Enemies[i].Dead) Kill(Enemies[i]);
         }
 
         void UpdateCombo()
@@ -196,7 +223,7 @@ namespace Skyforge.Simulation
         public ulong ComputeHash()
         {
             var h = new Hasher();
-            h.Add(Tick); h.Add(Score); h.Add(Kills); h.Add(Spawned); h.Add(Credits); h.Add(ComboTenths); h.Add(_comboIdle);
+            h.Add(Tick); h.Add(Score); h.Add(Kills); h.Add(CountedKills); h.Add(Veteran ? 1 : 0); h.Add(Spawned); h.Add(Credits); h.Add(ComboTenths); h.Add(_comboIdle);
             h.Add(HullDamageTaken); h.Add((int)Status); h.Add(_rng.State); h.Add(_nextEnemyId); h.Add(_nextPickupId);
             h.Add(_nextOrder); h.Add(_droneTimer);
             var p = Player;
@@ -223,7 +250,10 @@ namespace Skyforge.Simulation
             {
                 h.Add(e.Id); h.Add((int)e.Kind); h.Add(e.Pos); h.Add(e.Vel); h.Add(e.Hp); h.Add(e.Age);
                 h.Add(e.Mode); h.Add(e.Timer); h.Add(e.Counter); h.Add(e.Target); h.Add(e.Facing);
+                h.Add(e.Param); h.Add(e.ParentId); h.Add(e.Offset); h.Add(e.Shielded ? 1 : 0); h.Add(e.Intangible ? 1 : 0);
             }
+            h.Add(Lasers.Count);
+            foreach (var l in Lasers) { h.Add(l.Origin); h.Add(l.Heading); h.Add(l.Sweep); h.Add(l.Warn); h.Add(l.Fire); }
             h.Add(Pickups.Count);
             foreach (var k in Pickups) { h.Add(k.Id); h.Add(k.Pos); h.Add(k.Vel); h.Add(k.Value); h.Add(k.Homing ? 1 : 0); }
             return h.Value;

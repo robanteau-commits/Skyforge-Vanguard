@@ -200,7 +200,8 @@ World 1, and every attack is telegraphed (a muzzle glow 0.3 s before firing). **
 | Enemy HP | ×1.0 | ×1.3 |
 | Credits / score | ×1.0 | ×1.3 / ×1.5 |
 
-Medals are earned separately for each difficulty.
+Medals are earned separately for each difficulty (each pays its bonus once per difficulty). The
+Ace score on Veteran is ×1.5, matching its score bonus. Veteran stages open in order like Normal.
 
 ---
 
@@ -233,6 +234,17 @@ An armoured Armada sea-fortress that rises out of the ocean. It fills the top th
 - **Phase 3** (eye below 40%): the fortress lunges forward and fires dense ring barrages with gaps
   to slip through, plus sweeping laser telegraphs.
 - Each destroyed part drops credits and a repair orb. Defeat = **5000 score, 400 credits**.
+- **As built (v0.6.0):** the hull itself can't be hit; parts score Cannon 800 / Bay 1000 / Eye 2000
+  and drop 45 / 60 / 90 credits. Phase 3 lunges from y 10.5 to 7.5; lasers sweep from the cannon
+  mounts every 6 s after a 1.1 s warning line (20 damage). Boss Gnats, Carrier bays (150 HP, 400
+  score, 30 credits) and missiles don't count toward the kill %. **[TUNE]** Measured with a bot
+  that doesn't dodge: about 40 s of boss fight with level-3 weapons, about 2 min with the starters,
+  under 10 s with everything at level 5. If it's over too fast, raise the part HP.
+
+Ace scores (set from bot runs with level-3 weapons): 1-1 18,000 · 1-2 20,000 · 1-3 20,000 ·
+1-4 22,000 · 1-5 30,000 · 1-B 18,000. Medal bonuses rise from 250/200/150 (1-1) to 400/350/300
+(1-B). **[TUNE]** The backdrop stays the starfield on every stage (Rob's call); the "scrolling
+ground" column is the setting, not what's drawn.
 
 ### 6.2 Stage scripting
 Each stage is a **timeline** defined in C# content files: at time *t*, spawn *enemy type* in
@@ -363,7 +375,7 @@ port stays possible.
 | M1 | Enemies, bullets, damage, shield and hull, stage timeline; stage 1-1 (done in v0.2.0) | A full first stage |
 | M2 | All 8 wing weapons and the core specials, the hangar loadout screen (done in v0.3.0; everything unlocked for testing until M3's shop) | Try every loadout on 1-1 |
 | M3 | Credits, shop, upgrades, results screen, medals, saves, world map (done in v0.5.0) | The full loop |
-| M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | All of World 1 |
+| M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode (done in v0.6.0) | All of World 1 |
 | M5 | Audio, polish, settings, touch controls, mobile and web builds | v1 on all platforms |
 
 ---

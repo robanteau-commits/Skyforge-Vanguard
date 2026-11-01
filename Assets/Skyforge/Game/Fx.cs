@@ -52,6 +52,13 @@ namespace Skyforge.Game
                 case EnemyKind.Warden: return 2.2f;
                 case EnemyKind.Bastion: return 1.5f;
                 case EnemyKind.Gnat: return 0.75f;
+                case EnemyKind.BroodCarrier: return 3f;
+                case EnemyKind.BroodBay: return 1.4f;
+                case EnemyKind.Tidebreaker: return 6f;
+                case EnemyKind.TideCannon: return 2f;
+                case EnemyKind.TideMissileBay: return 2.2f;
+                case EnemyKind.TideEye: return 3f;
+                case EnemyKind.TideMissile: return 0.7f;
                 default: return 1f;
             }
         }
@@ -92,6 +99,19 @@ namespace Skyforge.Game
                         break;
                     case SimEventType.Destroyed:
                         Explode(ToWorld(e.Pos), BlastScale(e.EnemyKind));
+                        if (e.EnemyKind == EnemyKind.Tidebreaker)
+                        {
+                            // The whole fortress goes up: blasts all along the hull.
+                            for (int i = 0; i < 7; i++)
+                                Explode(ToWorld(e.Pos) + new Vector3(-6f + i * 2f, 0f, Random.Range(-2.5f, 2f)), Random.Range(1.8f, 3f));
+                        }
+                        break;
+                    case SimEventType.Deflected:
+                        // Shots glance off the armour: a few cyan sparks.
+                        Spawn(_muzzle, ToWorld(e.Pos, 0.2f), RandomDir(5f, 9f) + new Vector3(0, 0, -3f), 0.12f, 0.06f, 0);
+                        break;
+                    case SimEventType.BossPhase:
+                        Spawn(_enemyFlash, ToWorld(e.Pos, 0.5f), Vector3.zero, 0.4f, 4f, 1);
                         break;
                     case SimEventType.EnemyFired:
                         Spawn(_enemyFlash, ToWorld(e.Pos, 0.3f), Vector3.zero, 0.08f, 0.3f, 1);

@@ -155,7 +155,7 @@ namespace Skyforge.Simulation
                 float bestD = float.MaxValue;
                 foreach (var e in Enemies)
                 {
-                    if (e.Dead || !OnScreen(e) || _targets.Contains(e)) continue;
+                    if (e.Gone || e.Shielded || !OnScreen(e) || _targets.Contains(e)) continue;
                     float d = Vec2.DistanceSq(e.Pos, from);
                     if (d < bestD) { bestD = d; best = e; }
                 }
@@ -167,7 +167,7 @@ namespace Skyforge.Simulation
         Enemy EnemyById(int id)
         {
             if (id == 0) return null;
-            foreach (var e in Enemies) if (e.Id == id && !e.Dead) return e;
+            foreach (var e in Enemies) if (e.Id == id && !e.Gone) return e;
             return null;
         }
 
@@ -177,7 +177,7 @@ namespace Skyforge.Simulation
             float bestD = maxRange * maxRange;
             foreach (var e in Enemies)
             {
-                if (e.Dead || !OnScreen(e) || (exclude != null && exclude.Contains(e.Id))) continue;
+                if (e.Gone || e.Shielded || !OnScreen(e) || (exclude != null && exclude.Contains(e.Id))) continue;
                 float d = Vec2.DistanceSq(e.Pos, from);
                 if (d <= bestD) { bestD = d; best = e; }
             }
@@ -244,7 +244,7 @@ namespace Skyforge.Simulation
             for (int i = 0; i < Enemies.Count; i++)
             {
                 var e = Enemies[i];
-                if (e.Dead) continue;
+                if (e.Gone) continue;
                 if ((s.Pierce || s.HitsLeft > 0) && e.Id == s.LastHit) continue;
                 float r = e.Radius + s.Radius;
                 if (Vec2.DistanceSq(e.Pos, s.Pos) > r * r) continue;
@@ -330,7 +330,7 @@ namespace Skyforge.Simulation
             for (int i = 0; i < Enemies.Count; i++)
             {
                 var e = Enemies[i];
-                if (e.Dead) continue;
+                if (e.Gone) continue;
                 float r = radius + e.Radius;
                 if (Vec2.DistanceSq(e.Pos, at) <= r * r) DamageEnemy(e, damage, at);
             }
@@ -454,7 +454,7 @@ namespace Skyforge.Simulation
                     for (int i = 0; i < Enemies.Count; i++)
                     {
                         var e = Enemies[i];
-                        if (e.Dead) continue;
+                        if (e.Gone) continue;
                         float r = st.PulseRadius + e.Radius;
                         if (Vec2.DistanceSq(e.Pos, at) <= r * r) DamageEnemy(e, st.PulseDamage, e.Pos);
                     }
@@ -476,7 +476,7 @@ namespace Skyforge.Simulation
             float best = float.MaxValue;
             foreach (var e in Enemies)
             {
-                if (e.Dead || e == skip || e.Pos.Y > Field.HalfHeight + 1f) continue;
+                if (e.Gone || e == skip || e.Pos.Y > Field.HalfHeight + 1f) continue;
                 float dy = e.Pos.Y - fromY;
                 if (dy < -e.Radius || Math.Abs(e.Pos.X - x) > width * 0.5f + e.Radius) continue;
                 if (dy < best) { best = dy; hit = e; }

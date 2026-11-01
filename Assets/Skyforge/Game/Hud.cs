@@ -131,7 +131,9 @@ namespace Skyforge.Game
                 Overlay(field, sim, scale);
             }
 
-            if (sim.Status != StageStatus.Playing && sim.TimeSinceEnd >= ResultsDelay)
+            BossBar(field, sim, scale, panels);
+
+            if (sim.Status != StageStatus.Playing && sim.TimeSinceEnd >= ResultsDelay && _runner.ResultsReady)
                 Results(field, sim, scale);
             else if (_runner.Paused)
             {
@@ -179,7 +181,7 @@ namespace Skyforge.Game
             Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)), _small, 22f * s);
 
             var foot = new Rect(r.x, r.yMax - 44f * s, r.width, 44f * s);
-            GUI.Label(foot, "v" + Application.version + " · M3\n" + Mathf.RoundToInt(_fps) + " fps", _small);
+            GUI.Label(foot, "v" + Application.version + " · M4\n" + Mathf.RoundToInt(_fps) + " fps", _small);
         }
 
         void RightPanel(Rect r, float s)
@@ -229,6 +231,21 @@ namespace Skyforge.Game
             Bar(ref y, row, p.Hull / p.MaxHull, p.Hull < p.MaxHull * 0.3f ? Palette.HudDanger : Palette.HudHull, barH, s);
         }
 
+        /// <summary>The boss's name and health along the top of the field.</summary>
+        void BossBar(Rect field, StageSim sim, float s, bool panels)
+        {
+            var boss = sim.Boss;
+            if (boss == null || sim.Status != StageStatus.Playing || boss.Pos.Y > Field.HalfHeight + 2f) return;
+            float pad = 14f * s;
+            float y = field.y + (panels ? pad : 64f * s);
+            var r = new Rect(field.x + pad * 2f, y, field.width - pad * 4f, 0f);
+            var name = new GUIStyle(_label) { alignment = TextAnchor.UpperCenter, fontStyle = FontStyle.Bold, normal = { textColor = Palette.HudDanger } };
+            string phase = boss.Kind == EnemyKind.Tidebreaker && boss.Mode >= 1 ? "   ·   PHASE " + boss.Mode : "";
+            GUI.Label(new Rect(r.x, y, r.width, 22f * s), boss.Def.Name.ToUpperInvariant() + phase, name);
+            y += 22f * s;
+            Bar(ref y, r, sim.BossHealth(boss), Palette.HudDanger, 10f * s, s);
+        }
+
         // ------------------------------------------------------------------ results
 
         void Results(Rect field, StageSim sim, float s)
@@ -259,7 +276,8 @@ namespace Skyforge.Game
                     MedalResult(ref y, x, w, s, "Purge", res.Purge, res.NewPurge, sim.Stage.MedalBonus[2]);
                 }
                 ResultRow(ref y, x, w, s, "Total credits", res.TotalCredits.ToString("N0"));
-                string news = (res.NewBest ? "New best score! " : "") + (res.UnlockedStageId != null ? "Stage " + res.UnlockedStageId + " unlocked." : "");
+                string news = (res.NewBest ? "New best score! " : "") + (res.UnlockedStageId != null ? "Stage " + res.UnlockedStageId + " unlocked. " : "")
+                    + (res.UnlockedVeteran ? "VETERAN mode unlocked!" : "");
                 if (news.Length > 0) { GUI.Label(new Rect(field.x, y, field.width, 26f * s), news, new GUIStyle(_hint) { normal = { textColor = Palette.HudGold } }); y += 26f * s; }
             }
             else if (_runner.Sandbox || sim.Stage == null || sim.Stage == Stages.ArmadaSampler)
@@ -301,7 +319,8 @@ namespace Skyforge.Game
         // ------------------------------------------------------------------ helpers
 
         static string StageTitle(StageSim sim) =>
-            sim.Stage == null ? "Practice flight" : (sim.Stage.Id == "sampler" ? "" : "Stage " + sim.Stage.Id + " · ") + sim.Stage.Name;
+            (sim.Stage == null ? "Practice flight" : (sim.Stage.Id == "sampler" ? "" : "Stage " + sim.Stage.Id + " · ") + sim.Stage.Name)
+            + (sim.Veteran && sim.Stage != null ? " · VETERAN" : "");
 
         static void DrawRect(Rect r, Color c)
         {

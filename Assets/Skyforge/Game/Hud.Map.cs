@@ -64,7 +64,7 @@ namespace Skyforge.Game
             for (int i = 0; i < world.Length - 1; i++)
             {
                 var a = At(i); var b = At(i + 1);
-                bool open = _runner.Progress.IsUnlocked(world[i + 1].Id) || _runner.Sandbox;
+                bool open = _runner.Progress.IsUnlocked(world[i + 1].Id, _runner.Veteran) || _runner.Sandbox;
                 int dots = Mathf.CeilToInt(Vector2.Distance(a, b) / (14f * s));
                 for (int k = 1; k < dots; k++)
                 {
@@ -78,16 +78,16 @@ namespace Skyforge.Game
                 var st = world[i];
                 var c = At(i);
                 var rect = new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w, h);
-                bool unlocked = _runner.Sandbox || _runner.Progress.IsUnlocked(st.Id);
+                bool unlocked = _runner.Sandbox || _runner.Progress.IsUnlocked(st.Id, _runner.Veteran);
                 bool built = st.Def != null;
                 var style = st.Id == _mapSelected ? _buttonOn : unlocked && built ? _button : _buttonLocked;
-                string sub = !built ? "coming in M4" : !unlocked ? "locked" : "";
+                string sub = !built ? "not built yet" : !unlocked ? "locked" : st.Id == "1-B" ? "BOSS" : "";
                 if (GUI.Button(rect, st.Id + "  " + st.Name + (sub.Length > 0 ? "\n" + sub : "\n"), style))
                 {
                     _mapSelected = st.Id;
                     if (built && unlocked) _runner.SelectedStage = st.Def;
                 }
-                if (built) MedalChips(new Rect(rect.x + 10f * s, rect.yMax - 16f * s, rect.width - 20f * s, 10f * s), _runner.Progress.Record(st.Id), s, small: true);
+                if (built) MedalChips(new Rect(rect.x + 10f * s, rect.yMax - 16f * s, rect.width - 20f * s, 10f * s), _runner.Progress.Record(st.Id, _runner.Veteran), s, small: true);
             }
         }
 
@@ -101,8 +101,8 @@ namespace Skyforge.Game
             Line(ref y, r, "CREDITS", _label, 22f * s);
             Line(ref y, r, p.Credits.ToString("N0"), _gold, 36f * s);
             int medals = 0, possible = 0;
-            foreach (var st in Stages.World1) if (st.Def != null) { possible += 3; medals += p.Record(st.Id)?.MedalCount ?? 0; }
-            Line(ref y, r, "MEDALS", _label, 22f * s);
+            foreach (var st in Stages.World1) if (st.Def != null) { possible += 3; medals += p.Record(st.Id, _runner.Veteran)?.MedalCount ?? 0; }
+            Line(ref y, r, _runner.Veteran ? "MEDALS (VETERAN)" : "MEDALS", _label, 22f * s);
             Line(ref y, r, medals + " / " + possible, _value, 40f * s);
             y += 16f * s;
 
@@ -111,6 +111,16 @@ namespace Skyforge.Game
                 _runner.SetSandbox(!_runner.Sandbox);
             y += 46f * s;
             Line(ref y, r, "Try any weapon at any level. Credits and medals aren't earned in the sandbox.", _small, 44f * s);
+            y += 4f * s;
+            Line(ref y, r, "DIFFICULTY", _label, 22f * s);
+            bool vetOpen = p.VeteranUnlocked || _runner.Sandbox;
+            float half = (r.width - 6f * s) * 0.5f;
+            if (GUI.Button(new Rect(r.x, y, half, 36f * s), "Normal", _runner.Veteran ? _button : _buttonOn)) _runner.SetVeteran(false);
+            if (GUI.Button(new Rect(r.x + half + 6f * s, y, half, 36f * s), vetOpen ? "Veteran" : "Veteran (locked)", _runner.Veteran ? _buttonDanger : vetOpen ? _button : _buttonLocked) && vetOpen)
+                _runner.SetVeteran(true);
+            y += 40f * s;
+            Line(ref y, r, vetOpen ? "Veteran: faster, denser fire, ×1.5 damage, tougher enemies; ×1.3 credits, ×1.5 score, its own medals."
+                                   : "Beat the Tidebreaker to unlock Veteran.", _small, 44f * s);
             y += 8f * s;
             if (GUI.Button(new Rect(r.x, y, r.width * 0.48f, 36f * s), "Armada Sampler", _button)) { _runner.SelectedStage = Stages.ArmadaSampler; _runner.OpenHangar(); }
             if (GUI.Button(new Rect(r.x + r.width * 0.52f, y, r.width * 0.48f, 36f * s), "Practice", _button)) { _runner.SelectedStage = null; _runner.OpenHangar(); }
@@ -132,14 +142,14 @@ namespace Skyforge.Game
         {
             float y = r.y;
             var st = SelectedWorldStage;
-            var rec = _runner.Progress.Record(st.Id);
-            bool unlocked = _runner.Sandbox || _runner.Progress.IsUnlocked(st.Id);
-            Line(ref y, r, "STAGE " + st.Id, _label, 22f * s);
+            var rec = _runner.Progress.Record(st.Id, _runner.Veteran);
+            bool unlocked = _runner.Sandbox || _runner.Progress.IsUnlocked(st.Id, _runner.Veteran);
+            Line(ref y, r, (st.Id == "1-B" ? "BOSS STAGE" : "STAGE " + st.Id) + (_runner.Veteran ? " · VETERAN" : ""), _label, 22f * s);
             Line(ref y, r, st.Name, _heading, 34f * s);
             Line(ref y, r, st.Blurb, _body, 30f * s);
             if (st.Def == null)
             {
-                Line(ref y, r, "This stage arrives in milestone M4.", _small, 26f * s);
+                Line(ref y, r, "This stage isn't built yet.", _small, 26f * s);
                 return;
             }
             if (!unlocked)
@@ -149,7 +159,7 @@ namespace Skyforge.Game
             }
             Line(ref y, r, "Best score: " + (rec == null || rec.BestScore == 0 ? "—" : rec.BestScore.ToString("N0")), _body, 26f * s);
             y += 6f * s;
-            MedalRow(ref y, r, s, "ACE", "score " + st.Def.AceScore.ToString("N0"), rec?.Ace ?? false, st.Def.MedalBonus[0]);
+            MedalRow(ref y, r, s, "ACE", "score " + Progress.AceScore(st.Def, _runner.Veteran).ToString("N0"), rec?.Ace ?? false, st.Def.MedalBonus[0]);
             MedalRow(ref y, r, s, "UNTOUCHED", "clear with no hull damage", rec?.Untouched ?? false, st.Def.MedalBonus[1]);
             MedalRow(ref y, r, s, "PURGE", "destroy " + Stages.PurgePercent + "% of enemies", rec?.Purge ?? false, st.Def.MedalBonus[2]);
             y += 10f * s;

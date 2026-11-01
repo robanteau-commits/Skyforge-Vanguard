@@ -25,6 +25,8 @@ namespace Skyforge.Simulation
         public int MedalBonus;                      // credits from first-time medals
         public bool NewBest;
         public string UnlockedStageId;              // the next stage, if this clear opened it
+        public bool UnlockedVeteran;                // the first clear of the boss opens Veteran
+        public bool Veteran;                        // flown on Veteran
         public int TotalCredits;
     }
 
@@ -44,6 +46,8 @@ namespace Skyforge.Simulation
         public readonly int[] AirframeLevels = new int[Airframe.StatCount];
         public readonly List<StageRecord> Stages = new List<StageRecord>();
         public string LeftWing = "pulseRepeater", RightWing = "pulseRepeater", Core = "pulseNova";
+        /// <summary>The chosen difficulty: Veteran (docs/DESIGN.md §5.1) once it's unlocked.</summary>
+        public bool Veteran;
 
         /// <summary>A fresh save: the starter Pulse Repeater and Pulse Nova, no credits.</summary>
         public static Progress NewGame()
@@ -146,11 +150,28 @@ namespace Skyforge.Simulation
 
         // ------------------------------------------------------------------ stages and medals
 
-        public StageRecord Record(string stageId)
+        /// <summary>Medals are kept per difficulty: Veteran records are stored as "1-1@vet".</summary>
+        public static string RecordId(string stageId, bool veteran) => veteran ? stageId + "@vet" : stageId;
+
+        public StageRecord Record(string stageId, bool veteran = false)
         {
-            foreach (var r in Stages) if (r.Id == stageId) return r;
+            string id = RecordId(stageId, veteran);
+            foreach (var r in Stages) if (r.Id == id) return r;
             return null;
         }
+
+        /// <summary>Veteran opens once World 1's boss has been beaten on Normal.</summary>
+        public bool VeteranUnlocked
+        {
+            get
+            {
+                var w = Simulation.Stages.World1;
+                return Record(w[w.Length - 1].Id)?.Cleared ?? false;
+            }
+        }
+
+        /// <summary>The Ace medal's score on a difficulty (Veteran scores ×1.5, so its bar is too).</summary>
+        public static long AceScore(StageDef stage, bool veteran) => veteran ? stage.AceScore * 3 / 2 : stage.AceScore;
 
         StageRecord RecordOrNew(string stageId)
         {
@@ -159,14 +180,16 @@ namespace Skyforge.Simulation
             return r;
         }
 
-        /// <summary>A world-map stage is open if it's the first, or the one before it has been cleared.</summary>
-        public bool IsUnlocked(string stageId)
+        /// <summary>A world-map stage is open if it's the first, or the one before it has been cleared
+        /// (on the same difficulty; Veteran needs to be unlocked first).</summary>
+        public bool IsUnlocked(string stageId, bool veteran = false)
         {
+            if (veteran && !VeteranUnlocked) return false;
             var order = Simulation.Stages.World1;
             for (int i = 0; i < order.Length; i++)
             {
                 if (order[i].Id != stageId) continue;
-                return i == 0 || (Record(order[i - 1].Id)?.Cleared ?? false);
+                return i == 0 || (Record(order[i - 1].Id, veteran)?.Cleared ?? false);
             }
             return false;
         }
@@ -177,17 +200,19 @@ namespace Skyforge.Simulation
         /// </summary>
         public StageResult RecordStage(StageDef stage, StageSim sim)
         {
-            var res = new StageResult { Cleared = sim.Status == StageStatus.Cleared, CreditsBanked = sim.CreditsBanked };
+            bool vet = sim.Veteran;
+            var res = new StageResult { Cleared = sim.Status == StageStatus.Cleared, CreditsBanked = sim.CreditsBanked, Veteran = vet };
             Credits += res.CreditsBanked;
             if (stage != null)
             {
-                var rec = RecordOrNew(stage.Id);
+                bool veteranWasOpen = VeteranUnlocked;
+                var rec = RecordOrNew(RecordId(stage.Id, vet));
                 if (sim.Score > rec.BestScore) { rec.BestScore = sim.Score; res.NewBest = true; }
                 if (res.Cleared)
                 {
                     bool wasCleared = rec.Cleared;
                     rec.Cleared = true;
-                    res.Ace = sim.Score >= stage.AceScore;
+                    res.Ace = sim.Score >= AceScore(stage, vet);
                     res.Untouched = sim.HullDamageTaken <= 0f;
                     res.Purge = sim.KillPercent >= Simulation.Stages.PurgePercent;
                     if (res.Ace && !rec.Ace) { rec.Ace = res.NewAce = true; res.MedalBonus += stage.MedalBonus[0]; }
@@ -200,6 +225,7 @@ namespace Skyforge.Simulation
                         for (int i = 0; i < order.Length - 1; i++)
                             if (order[i].Id == stage.Id) res.UnlockedStageId = order[i + 1].Id;
                     }
+                    res.UnlockedVeteran = !veteranWasOpen && VeteranUnlocked;
                 }
             }
             res.TotalCredits = Credits;
@@ -217,6 +243,7 @@ namespace Skyforge.Simulation
             foreach (var o in _owned) sb.Append("weapon=").Append(o.Id).Append(':').Append(o.Level).Append('\n');
             sb.Append("airframe=").Append(string.Join(",", AirframeLevels)).Append('\n');
             sb.Append("fit=").Append(LeftWing).Append(',').Append(RightWing).Append(',').Append(Core).Append('\n');
+            sb.Append("veteran=").Append(Veteran ? 1 : 0).Append('\n');
             foreach (var r in Stages)
             {
                 sb.Append("stage=").Append(r.Id).Append(':').Append(r.Cleared ? 1 : 0).Append(':')
@@ -269,6 +296,9 @@ namespace Skyforge.Simulation
                             if (parts.Length == 3) { p.LeftWing = parts[0]; p.RightWing = parts[1]; p.Core = parts[2]; }
                             break;
                         }
+                        case "veteran":
+                            p.Veteran = val == "1";
+                            break;
                         case "stage":
                         {
                             var parts = val.Split(':');
@@ -291,6 +321,7 @@ namespace Skyforge.Simulation
             if (!Valid(p, p.LeftWing, WeaponSlot.Wing)) p.LeftWing = Weapons.PulseRepeater.Id;
             if (!Valid(p, p.RightWing, WeaponSlot.Wing)) p.RightWing = Weapons.PulseRepeater.Id;
             if (!Valid(p, p.Core, WeaponSlot.Core)) p.Core = Weapons.PulseNova.Id;
+            if (!p.VeteranUnlocked) p.Veteran = false;
             return p;
         }
 

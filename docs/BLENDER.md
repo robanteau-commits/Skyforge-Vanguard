@@ -47,11 +47,18 @@ The file name is the model's id. The game looks for exactly these names.
 | `enemy_spineMine` | Spiked mine. Hit radius 0.6. Spins slowly. | code mine |
 | `enemy_warden` | Gunship, broad and armoured. Hit radius 1.5. | code Warden |
 | `enemy_bastion` | Turret with one heavy barrel pointing forward (the whole model turns to aim). Hit radius 0.9. | code turret |
+| `enemy_broodCarrier` | Mini-boss: a broad armoured wedge, about 3.4 wide. Hit radius 1.7. Its two launch bays are separate models. | code Carrier |
+| `enemy_broodBay` | A Carrier's launch bay pod, mounted 1.9 to each side of the Carrier's centre. Hit radius 0.8. | code bay |
+| `enemy_tidebreaker` | The boss's hull, a sea-fortress about 15 wide and 6.5 deep (local x ±7.6, z −3.2…+3.3), prow forward. It's never hit itself; its parts sit on it: cannons at local (±5.5, z +1.2), missile bay at z −2.4, eye at z +1.6. | code hull |
+| `enemy_tideCannon` | Flank cannon turret with a twin barrel pointing forward (the model turns to aim). Hit radius 1.1. | code cannon |
+| `enemy_tideMissileBay` | Armoured block of launch tubes. Hit radius 1.2. | code bay |
+| `enemy_tideEye` | The core eye: a big glowing orb in a mount. Hit radius 1.4. Needs a child object named `Shield` (armoured iris plates over the orb), which the game shows only while the eye is shielded. | code eye |
+| `enemy_tideMissile` | Small homing missile. Hit radius 0.45. | code missile |
 | `prop_asteroid` | The rock a Bastion rides on, about 4–5 across and 2 tall, its top just below the turret's base. Origin at its centre; the game places it 1.4 below the play plane. | code asteroid |
 
 Later ones follow the same pattern. Pods use the weapon ids from `Simulation/Content/Weapons.cs`:
 `pod_scatterCannon_lv1`, `pod_lanceDriver_lv1`, … Enemies are `enemy_` plus the kind in camelCase:
-`enemy_broodCarrier`, `enemy_tidebreaker` (boss parts to be agreed when we get there).
+`enemy_broodCarrier`, `enemy_tidebreaker` and the boss parts listed above.
 Enemy models face forward like the ship (nose to Blender −Y); the game turns them to face where
 they're flying, which is usually down the screen.
 

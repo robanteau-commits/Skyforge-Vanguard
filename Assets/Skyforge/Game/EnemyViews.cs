@@ -20,6 +20,8 @@ namespace Skyforge.Game
             public float Flinch;
             public float Spin;
             public bool Seen;
+            /// <summary>The model's shield cover, if it has one (<see cref="EnemyModels.ShieldChild"/>).</summary>
+            public GameObject Shield;
         }
 
         readonly Transform _parent;
@@ -48,6 +50,8 @@ namespace Skyforge.Game
                 if (!_live.TryGetValue(e.Id, out var v))
                 {
                     v = new View { Go = Take(e.Kind), Kind = e.Kind, Curr = pos, Facing = e.Facing, Spin = e.Phase * 57f };
+                    var lid = v.Go.transform.Find(EnemyModels.ShieldChild);
+                    v.Shield = lid != null ? lid.gameObject : null;
                     v.Go.transform.localRotation = Quaternion.Euler(0f, e.Facing, 0f); // pooled views keep old headings
                     v.Go.transform.localScale = Vector3.one;
                     _live.Add(e.Id, v);
@@ -58,9 +62,11 @@ namespace Skyforge.Game
                 v.Facing = e.Facing;
                 v.Telegraph = e.Telegraph;
                 v.Radius = e.Radius;
+                if (v.Shield != null && v.Shield.activeSelf != e.Shielded) v.Shield.SetActive(e.Shielded);
             }
             foreach (var ev in sim.Events)
-                if (ev.Type == SimEventType.Hit && _live.TryGetValue(ev.EnemyId, out var hit)) hit.Flinch = 1f;
+                if (ev.Type == SimEventType.Hit && _live.TryGetValue(ev.EnemyId, out var hit))
+                    hit.Flinch = EnemyDefs.IsBig(hit.Kind) ? 0.35f : 1f; // big ships barely flinch
 
             _gone.Clear();
             foreach (var kv in _live) if (!kv.Value.Seen) _gone.Add(kv.Key);

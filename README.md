@@ -6,13 +6,26 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M3, the full loop: shop, upgrades, medals, saves and the world map (v0.5.0)
+- **Status:** milestone M4, all of World 1: five stages, the Tidebreaker boss and Veteran mode (v0.6.0)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
 2. Unity Hub → **Projects** → **Add** → **Add project from disk** → choose
    `D:\Games\SkyforgeVanguard`. The first open takes a few minutes while Unity builds its cache.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
+
+## What's in M4 — all of World 1
+- **Stages 1-2 to 1-5:** Harbor Line (Bastion turrets on drifting asteroids), Stormwall (Spine
+  Mine fields and Ram Drones), Foundry Ridge (Wardens, and the **Brood Carrier** mini-boss whose
+  two launch bays release Gnats until you shoot them off), Upper Air (everything, two Carriers).
+- **1-B The Tidebreaker:** a three-phase boss. Phase 1: two flank cannons sweep streams and a
+  missile bay launches homing missiles (shoot them down); the core eye is armoured. Phase 2 (both
+  cannons down): the eye opens and fires spirals while Gnat waves launch. Phase 3 (eye below 40%):
+  it lunges forward with ring barrages (find the gap) and sweeping lasers (red warning line first).
+  A boss health bar shows along the top.
+- **Veteran mode** unlocks when you beat the Tidebreaker: switch it on the map. Faster, denser fire,
+  ×1.5 damage, ×1.3 enemy HP; ×1.3 credits, ×1.5 score, and its own medals.
+- Fix: credits still flying in when a stage is cleared now count (they used to be lost).
 
 ## What's in M3 — the full loop
 - **World map** (the game starts here): World 1's six stages along a path over the turning Earth,
@@ -64,7 +77,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 | M1 | Enemies that shoot back, damage, shield and hull, stage timeline, stage 1-1 | **done** |
 | M2 | All 8 wing weapons, the 4 core specials, hangar loadout screen | **done** |
 | M3 | Credits, shop, upgrades, results, medals, saves, world map | **done** |
-| M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | |
+| M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | **done** |
 | M5 | Audio, polish, settings, touch, mobile and web builds | |
 
 ## Architecture

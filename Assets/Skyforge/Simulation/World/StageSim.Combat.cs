@@ -27,7 +27,7 @@ namespace Skyforge.Simulation
             EnemyShots.Add(new EnemyShot
             {
                 Pos = from,
-                Vel = vel,
+                Vel = vel * BulletSpeedScale,
                 Damage = damage,
                 Radius = visual == EnemyShotVisual.Dart ? DartRadius : OrbRadius,
                 Visual = visual,
@@ -44,6 +44,7 @@ namespace Skyforge.Simulation
         /// <summary><paramref name="count"/> shots evenly around a circle, the first at <paramref name="offsetDeg"/>.</summary>
         void FireRing(Enemy e, int count, float speed, float offsetDeg, float damage = EnemyShotDamage)
         {
+            count = Dense(count);
             for (int i = 0; i < count; i++)
                 FireShot(e.Pos, Vec2.FromHeading(offsetDeg + 360f * i / count) * speed, EnemyShotVisual.Orb, damage);
             Events.Add(new SimEvent { Type = SimEventType.EnemyFired, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id });
@@ -54,6 +55,7 @@ namespace Skyforge.Simulation
         {
             var from = Muzzle(e);
             float centre = Heading(AimFrom(from));
+            count = Dense(count);
             for (int i = 0; i < count; i++)
             {
                 float a = count == 1 ? centre : centre - spreadDeg * 0.5f + spreadDeg * i / (count - 1);
@@ -112,6 +114,7 @@ namespace Skyforge.Simulation
         {
             var p = Player;
             if (!p.Alive || damage <= 0f) return false;
+            if (Veteran) damage *= VeteranDamage;
             if (AegisUp)
             {
                 // The bubble absorbs it: the bullet is used up, nothing else happens.
@@ -155,7 +158,7 @@ namespace Skyforge.Simulation
         /// <summary>Gold shards for the enemy's credits, and maybe a repair orb.</summary>
         void DropLoot(Enemy e)
         {
-            int credits = e.Def.Credits;
+            int credits = Veteran ? (int)Math.Round(e.Def.Credits * VeteranCredits) : e.Def.Credits;
             if (credits > 0)
             {
                 int shards = Math.Min(6, (credits + CreditsPerShard - 1) / CreditsPerShard);

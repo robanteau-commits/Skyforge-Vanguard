@@ -33,12 +33,16 @@ stages, enemies or art.
 - `Simulation/World/StageSim*.cs` — one partial class split by topic: Player (movement), Weapons
   (all 8 wing weapons: projectiles, homing, piercing, bouncing, blasts, the beam, chain lightning),
   Core (charge and the 4 core specials), Enemies (per-kind behaviour, telegraphs, contact), Combat (enemy fire, shield/hull
-  damage, pickups), Timeline (spawning, cleared/failed), Practice (target drones).
+  damage, pickups), Timeline (spawning, cleared/failed), Practice (target drones), Bosses (the
+  Brood Carrier and the Tidebreaker, built from parts: enemies with a `ParentId` that ride at an
+  `Offset` and die with their parent; `Intangible` hull, `Shielded` eye, `Lasers` hazards).
+  Veteran multipliers come from `StageSetup.Veteran` (bullet speed in `FireShot`, density via
+  `Dense`, damage in `HurtPlayer`, HP in `SpawnEnemy`, credits/score in `DropLoot`/`Kill`).
   `Field` = the play field (X right, Y up the screen): 18 × 32 portrait on phones, 24 × 32 on
   PC/web (`StageSetup.FieldWidth`, `StageSim.HalfWidth`/`XScale`; use those, not the constants,
   for edges). Stages are authored for 18 wide and spread out. `Simulation/Content/` — weapons
   (`Weapons.cs`), enemy stats (`Enemies.cs`, `EnemyDefs`), stage timelines (`Stages.cs`, written
-  with `StageBuilder`: 1-1 First Light and the Armada Sampler test stage).
+  with `StageBuilder`: World 1's six stages 1-1 to 1-B and the Armada Sampler test stage).
   `Simulation/Progress/` — `Progress` (credits, owned weapons and levels, airframe levels, fit,
   stage records and medals; all shop rules; `Save`/`Load` text) and `Airframe` (upgrade costs and
   stat formulas, applied through `StageSetup.Airframe`). `Stages.World1` is the map order.
@@ -49,7 +53,7 @@ stages, enemies or art.
   `SaveStore`, PlayerPrefs) and banks each finished stage (`RecordIfFinished`; not in sandbox,
   practice or the sampler). `Hud` is IMGUI (partial: `Hud.Map.cs` is the world map, where the
   game starts, over `Art/GlobeModel`; `Hud.Hangar.cs` is the shop and loadout screen with a live
-  practice preview behind it; results in `Hud.cs`). `WeaponViews` draws beams, the Solar Lance, the Aegis ring, arcs and
+  practice preview behind it; results and the boss bar in `Hud.cs`). `BossViews` draws the boss lasers. `WeaponViews` draws beams, the Solar Lance, the Aegis ring, arcs and
   wingmates. Field (X, Y) maps to world (x, 0, z). The background (`Game/Art/Backdrop.cs`)
   is black space with a parallax starfield at y = −14 (Rob's call, replacing the terrain and
   ocean backdrops).
@@ -64,8 +68,9 @@ stages, enemies or art.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
 - `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
   `StageTests` (enemies, damage, combo, pickups, stage flow), `WeaponTests` (every wing weapon
-  and core), `LevelTests` (what each weapon level adds), `FieldTests` (the wide PC field) and
-  `ProgressTests` (shop, airframe, medals, unlocks, save text).
+  and core), `LevelTests` (what each weapon level adds), `FieldTests` (the wide PC field),
+  `ProgressTests` (shop, airframe, medals, unlocks, save text) and `WorldTests` (stages, bosses,
+  Veteran).
 
 ## Verifying changes
 - **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:

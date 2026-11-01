@@ -16,6 +16,20 @@ namespace Skyforge.Simulation
         Warden,
         /// <summary>Turret on a drifting asteroid: tracks the player and fires aimed bursts.</summary>
         Bastion,
+        /// <summary>Mini-boss: crosses the screen slowly firing spread bursts; its two bays launch Gnats.</summary>
+        BroodCarrier,
+        /// <summary>A Brood Carrier's launch bay (a part: moves with the carrier).</summary>
+        BroodBay,
+        /// <summary>World 1 boss, the controller and hull: it can't be hit, its parts can.</summary>
+        Tidebreaker,
+        /// <summary>Tidebreaker flank cannon: sweeping aimed streams (phase 1).</summary>
+        TideCannon,
+        /// <summary>Tidebreaker missile bay: launches slow homing missiles.</summary>
+        TideMissileBay,
+        /// <summary>Tidebreaker core eye: shielded until both cannons fall; spirals, then ring barrages.</summary>
+        TideEye,
+        /// <summary>A slow homing missile from the missile bay; can be shot down.</summary>
+        TideMissile,
     }
 
     /// <summary>
@@ -51,6 +65,18 @@ namespace Skyforge.Simulation
         public static readonly EnemyDef Warden = D(EnemyKind.Warden, "Warden", 160f, 1.5f, 600, 60, 30f, 1f);
         public static readonly EnemyDef Bastion = D(EnemyKind.Bastion, "Bastion", 90f, 0.9f, 400, 36, 20f, 0.25f);
 
+        public static readonly EnemyDef BroodCarrier = D(EnemyKind.BroodCarrier, "Brood Carrier", 700f, 1.7f, 2500, 240, 30f, 1f);
+        public static readonly EnemyDef BroodBay = D(EnemyKind.BroodBay, "Launch Bay", 150f, 0.8f, 400, 30, 20f);
+        public static readonly EnemyDef Tidebreaker = D(EnemyKind.Tidebreaker, "The Tidebreaker", 1f, 0f, 5000, 400, 0f, 1f);
+        public static readonly EnemyDef TideCannon = D(EnemyKind.TideCannon, "Flank Cannon", 400f, 1.1f, 800, 45, 30f, 1f);
+        public static readonly EnemyDef TideMissileBay = D(EnemyKind.TideMissileBay, "Missile Bay", 500f, 1.2f, 1000, 60, 30f, 1f);
+        public static readonly EnemyDef TideEye = D(EnemyKind.TideEye, "Core Eye", 1500f, 1.4f, 2000, 90, 30f);
+        public static readonly EnemyDef TideMissile = D(EnemyKind.TideMissile, "Missile", 8f, 0.45f, 30, 0, 15f);
+
+        /// <summary>The big ones: a heavier core charge, a bigger blast and a screen shake.</summary>
+        public static bool IsBig(EnemyKind k) => k == EnemyKind.Warden || k == EnemyKind.Bastion || k == EnemyKind.BroodCarrier ||
+            k == EnemyKind.BroodBay || k == EnemyKind.Tidebreaker || k == EnemyKind.TideCannon || k == EnemyKind.TideMissileBay || k == EnemyKind.TideEye;
+
         public static EnemyDef Of(EnemyKind kind)
         {
             switch (kind)
@@ -61,6 +87,13 @@ namespace Skyforge.Simulation
                 case EnemyKind.SpineMine: return SpineMine;
                 case EnemyKind.Warden: return Warden;
                 case EnemyKind.Bastion: return Bastion;
+                case EnemyKind.BroodCarrier: return BroodCarrier;
+                case EnemyKind.BroodBay: return BroodBay;
+                case EnemyKind.Tidebreaker: return Tidebreaker;
+                case EnemyKind.TideCannon: return TideCannon;
+                case EnemyKind.TideMissileBay: return TideMissileBay;
+                case EnemyKind.TideEye: return TideEye;
+                case EnemyKind.TideMissile: return TideMissile;
                 default: return PracticeDrone;
             }
         }

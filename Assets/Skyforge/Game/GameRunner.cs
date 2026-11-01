@@ -44,6 +44,16 @@ namespace Skyforge.Game
         public StageDef SelectedStage { get; set; } = Stages.FirstLight;
         /// <summary>What the last finished stage earned (null for sandbox, practice and test stages).</summary>
         public StageResult LastResult { get; private set; }
+
+        /// <summary>Fly on Veteran: the saved choice once it's unlocked (the sandbox can always try it).</summary>
+        public bool Veteran => Progress.Veteran && (Sandbox || Progress.VeteranUnlocked);
+
+        public void SetVeteran(bool on)
+        {
+            if (on && !Sandbox && !Progress.VeteranUnlocked) return;
+            Progress.Veteran = on;
+            if (!Sandbox) SaveStore.Save(Progress);
+        }
         bool _recorded;
         GameObject _globe;
 
@@ -58,6 +68,7 @@ namespace Skyforge.Game
 
         Asteroids _asteroids;
         WeaponViews _weapons;
+        BossViews _bossViews;
         Transform _world;
         Backdrop _backdrop;
         ShipView _ship;
@@ -108,6 +119,7 @@ namespace Skyforge.Game
             _enemies = new EnemyViews(_world);
             _asteroids = new Asteroids(_world);
             _weapons = new WeaponViews(_world);
+            _bossViews = new BossViews();
             _shots = new ShotRenderer();
             _fx = new Fx();
             _globe = GlobeModel.Create(_world);
@@ -171,7 +183,7 @@ namespace Skyforge.Game
         public void Launch()
         {
             Current = Screen.Flying;
-            Begin(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = Loadout, Stage = SelectedStage, FieldWidth = FieldWidth, Airframe = AirframeLevels });
+            Begin(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = Loadout, Stage = SelectedStage, FieldWidth = FieldWidth, Airframe = AirframeLevels, Veteran = Veteran });
         }
 
         public void SetSandbox(bool on)
@@ -237,9 +249,17 @@ namespace Skyforge.Game
 
         /// <summary>Bank a finished stage into the save, once, when it ends (not in the sandbox,
         /// practice or the test stage).</summary>
+        /// <summary>Seconds after a clear to wait for the last credits to fly in before banking them.</summary>
+        public const float BankWaitMax = 3f;
+
+        /// <summary>The finished stage has been banked, so the results screen can show it.</summary>
+        public bool ResultsReady => _recorded;
+
         void RecordIfFinished()
         {
             if (_recorded || Current != Screen.Flying || Sim.Status == StageStatus.Playing) return;
+            // A clear pulls every pickup in: bank once they've arrived, so the last drops count.
+            if (Sim.Status == StageStatus.Cleared && Sim.Pickups.Count > 0 && Sim.TimeSinceEnd < BankWaitMax) return;
             _recorded = true;
             if (Sandbox || Sim.Stage == null || Sim.Stage == Stages.ArmadaSampler) { LastResult = null; return; }
             LastResult = Progress.RecordStage(Sim.Stage, Sim);
@@ -300,7 +320,7 @@ namespace Skyforge.Game
                 if (PlayerControls.HangarPressed()) OpenHangar();
                 if (PlayerControls.MapPressed()) OpenMap();
                 // On the results screen, confirm continues to the map.
-                if (Sim.Status != StageStatus.Playing && Sim.TimeSinceEnd >= Hud.ResultsDelay + 0.3f && PlayerControls.ConfirmPressed())
+                if (ResultsReady && Sim.Status != StageStatus.Playing && Sim.TimeSinceEnd >= Hud.ResultsDelay + 0.3f && PlayerControls.ConfirmPressed())
                     OpenMap();
             }
 
@@ -331,7 +351,9 @@ namespace Skyforge.Game
                     {
                         if (ev.Type == SimEventType.HullHit) View.Shake(0.35f);
                         else if (ev.Type == SimEventType.PlayerDestroyed) View.Shake(0.8f);
-                        else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Warden) View.Shake(0.5f);
+                        else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Tidebreaker) View.Shake(1.2f);
+                        else if (ev.Type == SimEventType.Destroyed && EnemyDefs.IsBig(ev.EnemyKind)) View.Shake(0.5f);
+                        else if (ev.Type == SimEventType.BossPhase && ev.Value > 1f) View.Shake(0.6f);
                         else if (ev.Type == SimEventType.CoreActivated && ev.EnemyId == (int)WeaponKind.PulseNova && !InHangar) View.Shake(0.45f);
                     }
                     _accumulator -= Field.Dt;
@@ -354,6 +376,7 @@ namespace Skyforge.Game
             _asteroids.Render(renderTime);
             _enemies.Render(alpha, Paused ? 0f : dt);
             _weapons.Render(Sim, shipPos, renderTime, Paused ? 0f : dt);
+            _bossViews.Render(Sim, renderTime);
             _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime, Paused ? 0f : dt);
             _fx.Tick(Paused ? 0f : dt);
         }
@@ -379,6 +402,7 @@ namespace Skyforge.Game
             _enemies?.Dispose();
             _asteroids?.Dispose();
             _weapons?.Dispose();
+            _bossViews?.Dispose();
         }
     }
 }
