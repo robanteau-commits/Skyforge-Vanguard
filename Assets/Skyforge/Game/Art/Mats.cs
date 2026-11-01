@@ -58,6 +58,29 @@ namespace Skyforge.Game
         public static Material PlayerGlowSoft => Glow("playerGlowSoft", Palette.PlayerGlow, 1.4f);
         public static Material PlayerShot => Glow("playerShot", Palette.PlayerShot, 4f);
 
+        // Weapon effects: a bright core, a coloured body, a dimmer trail per weapon.
+        public static Material PulseCore => Glow("pulseCore", Palette.PulseCore, 4.5f);
+        public static Material Pulse => Glow("pulse", Palette.Pulse, 2.6f);
+        public static Material PulseTrail => Glow("pulseTrail", Palette.Pulse, 1.2f);
+        public static Material ScatterCore => Glow("scatterCore", Palette.ScatterCore, 4f);
+        public static Material Scatter => Glow("scatter", Palette.Scatter, 2.6f);
+        public static Material ScatterTrail => Glow("scatterTrail", Palette.Scatter, 1.1f);
+        public static Material LanceCore => Glow("lanceCore", Palette.LanceCore, 5f);
+        public static Material Lance => Glow("lance", Palette.Lance, 2.4f);
+        public static Material LanceTrail => Glow("lanceTrail", Palette.Lance, 1.3f);
+        public static Material BeamCore => Glow("beamCore", Palette.BeamCore, 4.5f);
+        public static Material Beam => Glow("beam", Palette.Beam, 2.6f);
+        public static Material BeamOuter => Glow("beamOuter", Palette.BeamOuter, 1.4f);
+        public static Material Exhaust => Glow("exhaust", Palette.Exhaust, 4f);
+        public static Material Smoke => Lit("smoke", Palette.Smoke, 0f, 0.05f);
+        public static Material Hornet => Glow("hornet", Palette.Hornet, 3.2f);
+        public static Material HornetTrail => Glow("hornetTrail", Palette.HornetTrail, 1.8f);
+        public static Material ArcCore => Glow("arcCore", Palette.ArcCore, 5f);
+        public static Material Arc => Glow("arc", Palette.Arc, 2.5f);
+        public static Material Disc => Glow("disc", Palette.Disc, 3f);
+        public static Material DiscHub => Glow("discHub", Color.white, 4f);
+        public static Material DiscPlate => Lit("discPlate", Palette.DiscPlate, 0.3f, 0.5f);
+
         public static Material EnemyHull => Lit("enemyHull", Palette.EnemyHull, 0.5f, 0.35f);
         public static Material EnemyPlate => Lit("enemyPlate", Palette.EnemyPlate, 0.45f, 0.4f);
         public static Material EnemyGlow => Glow("enemyGlow", Palette.EnemyGlow, 3f);

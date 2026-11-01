@@ -276,6 +276,12 @@ port stays possible.
 - **Palette:** gunmetal, slate and deep navy for ships and terrain; desaturated, darkened
   backgrounds so the action stands out. Emissive accents: **player cyan/white**, **enemy
   red/magenta**, **enemy bullets orange/pink**, **credits gold**, **repair orbs green**.
+- **Weapon effects (v0.3.1):** every wing weapon has its own shape, hue and trail, all cool colours
+  well clear of enemy orange/red, credit gold and repair green: Pulse = cyan bolts with tails;
+  Scatter = sky-blue flak pellets; Lance = ice-white spears with chevrons; Sunline = layered beam
+  (white core, cyan body, deep-blue edge, running rings, impact flare); Seeker = alloy missiles
+  with fins, exhaust and grey smoke; Hornet = mint-aqua darts with dotted trails; Arc = violet
+  forked lightning; Ricochet = spinning aqua saw discs.
 - **Player ship look (decided by Rob, 2026-11-01):** "faceted alloy" after the Kestrel concept:
   a light matte alloy delta interceptor with a teal canopy, graphite nacelles and small peach
   wingtip panels (brief in docs/BLENDER.md §8). Enemies keep the dark hull and red-magenta glow

@@ -16,11 +16,11 @@ namespace Skyforge.Game
         struct ArcSegment
         {
             public Vector3 A, B;
-            public float Life;
+            public float Life, Width;
         }
 
-        readonly Mesh _box, _drone;
-        readonly InstancedBatch _beamCore, _beamGlow, _arc, _aegis;
+        readonly Mesh _box, _drone, _ring, _flare;
+        readonly InstancedBatch _beamCore, _beamMid, _beamOuter, _beamRings, _beamFlare, _arcCore, _arcGlow, _aegis;
         readonly List<ArcSegment> _arcs = new List<ArcSegment>(64);
         readonly GameObject[] _wingmates = new GameObject[3];
         readonly Vector3[] _wingmatePos = new Vector3[3];
@@ -30,9 +30,21 @@ namespace Skyforge.Game
             var b = new MeshBuilder();
             b.Box(Vector3.zero, Vector3.one, 0);
             _box = b.Build("UnitBox");
-            _beamCore = new InstancedBatch(_box, Mats.PlayerShot);
-            _beamGlow = new InstancedBatch(_box, Mats.PlayerGlowSoft);
-            _arc = new InstancedBatch(_box, Mats.PlayerShot);
+            var rb = new MeshBuilder();
+            rb.Octahedron(Vector3.zero, new Vector3(0.5f, 0.03f, 0.08f), 0);
+            _ring = rb.Build("BeamRing");
+            var fb = new MeshBuilder();
+            fb.Octahedron(Vector3.zero, new Vector3(0.35f, 0.2f, 0.35f), 0);
+            _flare = fb.Build("BeamFlare");
+            // Sunline Beam / Solar Lance: white core, cyan body, deep blue edge, rings running up it.
+            _beamCore = new InstancedBatch(_box, Mats.BeamCore);
+            _beamMid = new InstancedBatch(_box, Mats.Beam);
+            _beamOuter = new InstancedBatch(_box, Mats.BeamOuter);
+            _beamRings = new InstancedBatch(_ring, Mats.Beam);
+            _beamFlare = new InstancedBatch(_flare, Mats.BeamCore);
+            // Arc Coil: violet lightning with a white core.
+            _arcCore = new InstancedBatch(_box, Mats.ArcCore);
+            _arcGlow = new InstancedBatch(_box, Mats.Arc);
             _aegis = new InstancedBatch(_box, Mats.PlayerGlow);
 
             _drone = DroneMesh();
@@ -66,15 +78,21 @@ namespace Skyforge.Game
             foreach (var e in events)
             {
                 if (e.Type != SimEventType.Arc) continue;
-                // A jagged bolt: four segments with random sideways kinks.
+                // A jagged bolt: five segments with random sideways kinks, and usually a small fork.
                 var a = new Vector3(e.Pos.X, PlayY, e.Pos.Y);
                 var b = new Vector3(e.To.X, PlayY, e.To.Y);
                 var side = Vector3.Cross(b - a, Vector3.up).normalized;
                 var prev = a;
-                for (int k = 1; k <= 4; k++)
+                const int n = 5;
+                for (int k = 1; k <= n; k++)
                 {
-                    var next = k == 4 ? b : Vector3.Lerp(a, b, k / 4f) + side * Random.Range(-0.45f, 0.45f);
-                    _arcs.Add(new ArcSegment { A = prev, B = next, Life = 0.09f });
+                    var next = k == n ? b : Vector3.Lerp(a, b, k / (float)n) + side * Random.Range(-0.5f, 0.5f);
+                    _arcs.Add(new ArcSegment { A = prev, B = next, Life = 0.09f, Width = 0.07f });
+                    if (k == 2 && Random.value < 0.7f)
+                    {
+                        var fork = next + side * Random.Range(-1f, 1f) + (b - a).normalized * Random.Range(-0.5f, 0.8f);
+                        _arcs.Add(new ArcSegment { A = next, B = fork, Life = 0.07f, Width = 0.045f });
+                    }
                     prev = next;
                 }
             }
@@ -90,7 +108,8 @@ namespace Skyforge.Game
 
         public void Render(StageSim sim, Vec2 shipPos, float time, float dt)
         {
-            _beamCore.Clear(); _beamGlow.Clear(); _arc.Clear(); _aegis.Clear();
+            _beamCore.Clear(); _beamMid.Clear(); _beamOuter.Clear(); _beamRings.Clear(); _beamFlare.Clear();
+            _arcCore.Clear(); _arcGlow.Clear(); _aegis.Clear();
             var p = sim.Player;
             var ship = new Vector3(shipPos.X, PlayY, shipPos.Y);
             float pulse = 1f + 0.12f * Mathf.Sin(time * 30f);
@@ -105,10 +124,9 @@ namespace Skyforge.Game
                 var a = new Vector3(muzzle.X, PlayY, muzzle.Y);
                 var b = new Vector3(muzzle.X, PlayY, Mathf.Max(muzzle.Y + 0.1f, p.BeamEndY[i]));
                 float w = wing.Stats.Width;
-                // Brighter as the damage ramps up on a target.
+                // Thicker and brighter-cored as the damage ramps up on a target.
                 float ramp = wing.Stats.RampTime > 0f ? Mathf.Clamp01(p.BeamTime[i] / wing.Stats.RampTime) : 0f;
-                _beamCore.Add(Segment(a, b, w * (0.35f + 0.2f * ramp) * pulse, 0.06f));
-                _beamGlow.Add(Segment(a + Vector3.down * 0.05f, b, w * pulse, 0.04f));
+                Beam(a, b, w * (1f + 0.3f * ramp), pulse, time + i * 0.37f, p.BeamTarget[i] != 0);
             }
 
             // Solar Lance: a wide beam from the ship to past the top of the screen.
@@ -118,8 +136,7 @@ namespace Skyforge.Game
                 var a = ship + new Vector3(0f, 0f, 0.8f);
                 var b = new Vector3(ship.x, PlayY, Field.HalfHeight + 3f);
                 float wobble = 1f + 0.06f * Mathf.Sin(time * 22f);
-                _beamCore.Add(Segment(a, b, w * 0.45f * wobble, 0.1f));
-                _beamGlow.Add(Segment(a + Vector3.down * 0.08f, b, w * wobble, 0.06f));
+                Beam(a, b, w, wobble, time, false);
             }
 
             // Aegis Field: a rotating ring of glowing segments around the ship.
@@ -144,10 +161,12 @@ namespace Skyforge.Game
                 s.Life -= dt;
                 if (s.Life <= 0f) { _arcs.RemoveAt(k); continue; }
                 _arcs[k] = s;
-                _arc.Add(Segment(s.A, s.B, 0.07f, 0.05f));
+                _arcGlow.Add(Segment(s.A + Vector3.down * 0.03f, s.B + Vector3.down * 0.03f, s.Width * 2.6f, 0.03f));
+                _arcCore.Add(Segment(s.A, s.B, s.Width, 0.05f));
             }
 
-            _beamGlow.Draw(); _beamCore.Draw(); _arc.Draw(); _aegis.Draw();
+            _beamOuter.Draw(); _beamMid.Draw(); _beamCore.Draw(); _beamRings.Draw(); _beamFlare.Draw();
+            _arcGlow.Draw(); _arcCore.Draw(); _aegis.Draw();
 
             // Wingmates follow the ship with a little lag.
             for (int i = 0; i < _wingmates.Length; i++)
@@ -168,6 +187,29 @@ namespace Skyforge.Game
             }
         }
 
+        /// <summary>A layered beam from <paramref name="a"/> to <paramref name="b"/> with rings running along it
+        /// and, if it's burning a target, a flare at the end.</summary>
+        void Beam(Vector3 a, Vector3 b, float width, float pulse, float time, bool flare)
+        {
+            _beamOuter.Add(Segment(a + Vector3.down * 0.06f, b + Vector3.down * 0.06f, width * 2.1f * pulse, 0.02f));
+            _beamMid.Add(Segment(a, b, width * pulse, 0.04f));
+            _beamCore.Add(Segment(a + Vector3.up * 0.05f, b + Vector3.up * 0.05f, width * 0.35f, 0.06f));
+            var d = b - a;
+            float len = d.magnitude;
+            if (len > 0.5f)
+            {
+                var dir = d / len;
+                var rot = Quaternion.LookRotation(dir);
+                const int rings = 5;
+                for (int k = 0; k < rings; k++)
+                {
+                    float f = Mathf.Repeat(time * 2.2f + k / (float)rings, 1f);
+                    _beamRings.Add(Matrix4x4.TRS(a + d * f + Vector3.up * 0.08f, rot, new Vector3(width * 2.4f * pulse, 1f, 1f)));
+                }
+            }
+            if (flare) _beamFlare.Add(Matrix4x4.TRS(b + Vector3.up * 0.2f, Quaternion.Euler(0f, time * 400f, 0f), Vector3.one * (0.8f + 0.4f * Mathf.Sin(time * 40f)) * (width / 0.35f)));
+        }
+
         public void Clear()
         {
             _arcs.Clear();
@@ -177,6 +219,8 @@ namespace Skyforge.Game
         public void Dispose()
         {
             if (_box != null) Object.Destroy(_box);
+            if (_ring != null) Object.Destroy(_ring);
+            if (_flare != null) Object.Destroy(_flare);
             if (_drone != null) Object.Destroy(_drone);
         }
     }

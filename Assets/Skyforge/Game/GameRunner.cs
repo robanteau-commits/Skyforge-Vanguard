@@ -161,6 +161,7 @@ namespace Skyforge.Game
             _enemies.Clear();
             _asteroids.Clear();
             _weapons.Clear();
+            _shots.Clear();
             _fx.Clear();
             if (_ship == null) _ship = new ShipView(_world, Loadout);
             else _ship.RefitPods(Loadout);
@@ -248,7 +249,7 @@ namespace Skyforge.Game
             _asteroids.Render(renderTime);
             _enemies.Render(alpha, Paused ? 0f : dt);
             _weapons.Render(Sim, shipPos, renderTime, Paused ? 0f : dt);
-            _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime);
+            _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime, Paused ? 0f : dt);
             _fx.Tick(Paused ? 0f : dt);
         }
 

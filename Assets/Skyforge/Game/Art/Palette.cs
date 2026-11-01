@@ -24,6 +24,27 @@ namespace Skyforge.Game
         public static readonly Color PlayerGlow = new Color(0.3f, 0.9f, 1f);
         public static readonly Color PlayerShot = new Color(0.45f, 0.95f, 1f);
 
+        // Weapon effects (designed on the "Weapon effects" render page): each wing weapon has its own
+        // hue, all cool (cyan, sky, ice, aqua, mint, violet) and well clear of enemy orange/red,
+        // credit gold and repair green.
+        public static readonly Color PulseCore = new Color(0.85f, 1f, 1f);
+        public static readonly Color Pulse = new Color(0.25f, 0.9f, 1f);
+        public static readonly Color ScatterCore = new Color(0.85f, 0.95f, 1f);
+        public static readonly Color Scatter = new Color(0.35f, 0.65f, 1f);
+        public static readonly Color LanceCore = Color.white;
+        public static readonly Color Lance = new Color(0.65f, 0.85f, 1f);
+        public static readonly Color BeamCore = Color.white;
+        public static readonly Color Beam = new Color(0.3f, 0.95f, 1f);
+        public static readonly Color BeamOuter = new Color(0.1f, 0.5f, 0.75f);
+        public static readonly Color Exhaust = new Color(0.75f, 0.95f, 1f);
+        public static readonly Color Smoke = new Color(0.46f, 0.48f, 0.53f);
+        public static readonly Color Hornet = new Color(0.25f, 1f, 0.85f);
+        public static readonly Color HornetTrail = new Color(0.15f, 0.7f, 0.62f);
+        public static readonly Color ArcCore = new Color(0.95f, 0.9f, 1f);
+        public static readonly Color Arc = new Color(0.55f, 0.45f, 1f);
+        public static readonly Color Disc = new Color(0.3f, 1f, 1f);
+        public static readonly Color DiscPlate = new Color(0.1f, 0.23f, 0.27f);
+
         // Enemies
         public static readonly Color EnemyHull = new Color(0.14f, 0.1f, 0.13f);
         public static readonly Color EnemyPlate = new Color(0.28f, 0.2f, 0.25f);

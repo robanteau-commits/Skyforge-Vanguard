@@ -6,7 +6,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M2, weapons and the hangar (v0.3.0)
+- **Status:** milestone M2, weapons and the hangar (v0.3.1)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
