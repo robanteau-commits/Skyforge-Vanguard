@@ -189,7 +189,7 @@ orbit and then onto the invaders' world, see §11.)
 
 | Stage | Name | Backdrop (scrolling ground) | New threat introduced | Length |
 |---|---|---|---|---|
-| 1-1 | **First Light** | Coastal city at dawn, rooftops and highways | Gnats, Needles | 2.5 min |
+| 1-1 | **First Light** | Open ocean at dawn: a dark low-poly swell with rocky islets (Rob's pick from the backdrop concepts, 2026-11-01) | Gnats, Needles | 2.5 min |
 | 1-2 | **Harbor Line** | Docks, cargo ships, cranes | Bastion turrets on ships | 2.5 min |
 | 1-3 | **Stormwall** | Ocean in a storm, lightning flashes | Spine Mines, Ram Drones | 3 min |
 | 1-4 | **Foundry Ridge** | Mountain refinery, smoke stacks | Wardens; first Brood Carrier as mid-boss | 3 min |

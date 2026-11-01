@@ -77,32 +77,32 @@ namespace Skyforge.Game
         }
 
         /// <summary>
-        /// Stage 1-1 dawn: a low, warm sun from ahead and to the right (it rakes across the city and
-        /// picks out the facets), cool blue-violet ambient, violet haze towards the top of the screen,
+        /// Stage 1-1, dark dawn over the open sea: a low, dim, warm sun from ahead and to the left
+        /// (it glints off the wave facets), dark blue ambient, haze towards the top of the screen,
         /// and a dim cyan rim on the ship from ahead.
         /// </summary>
         static void SetupLighting()
         {
             RenderSettings.skybox = null;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.24f, 0.26f, 0.38f);
-            RenderSettings.ambientEquatorColor = new Color(0.12f, 0.11f, 0.17f);
-            RenderSettings.ambientGroundColor = new Color(0.05f, 0.04f, 0.05f);
+            RenderSettings.ambientSkyColor = new Color(0.16f, 0.18f, 0.26f);
+            RenderSettings.ambientEquatorColor = new Color(0.07f, 0.075f, 0.11f);
+            RenderSettings.ambientGroundColor = new Color(0.03f, 0.03f, 0.04f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = Palette.Fog;
-            RenderSettings.fogStartDistance = 50f;
-            RenderSettings.fogEndDistance = 100f;
+            RenderSettings.fogStartDistance = 48f;
+            RenderSettings.fogEndDistance = 96f;
 
             Light key = null;
             foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
                 if (l.type == LightType.Directional) { key = l; break; }
             if (key == null) key = new GameObject("Key Light").AddComponent<Light>();
             key.type = LightType.Directional;
-            key.color = new Color(1f, 0.8f, 0.62f);
-            key.intensity = 1.3f;
+            key.color = new Color(1f, 0.78f, 0.6f);
+            key.intensity = 0.95f;
             key.shadows = LightShadows.None;
-            key.transform.rotation = Quaternion.Euler(32f, 225f, 0f);
+            key.transform.rotation = Quaternion.Euler(24f, 150f, 0f);
             RenderSettings.sun = key;
 
             var rim = new GameObject("Rim Light").AddComponent<Light>();
