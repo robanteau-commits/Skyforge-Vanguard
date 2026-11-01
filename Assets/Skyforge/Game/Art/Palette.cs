@@ -10,9 +10,8 @@ namespace Skyforge.Game
     public static class Palette
     {
         // Screen
-        public static readonly Color Clear = new Color(0.02f, 0.025f, 0.04f);
-        /// <summary>Sea haze: the far (top) part of the sea fades into a dark blue-violet.</summary>
-        public static readonly Color Fog = new Color(0.04f, 0.045f, 0.07f);
+        /// <summary>Plain black space.</summary>
+        public static readonly Color Clear = Color.black;
         public static readonly Color PanelBg = new Color(0.03f, 0.04f, 0.06f, 0.92f);
 
         // Player ship
@@ -34,12 +33,8 @@ namespace Skyforge.Game
         public static readonly Color Spark = new Color(1f, 0.85f, 0.6f);
         public static readonly Color Credit = new Color(1f, 0.78f, 0.25f);
 
-        // Stage 1-1 backdrop: B · Open Ocean, darker (Rob's pick). Kept darker and less saturated
-        // than anything the player has to read; no point lights.
-        public static readonly Color Sea = new Color(0.018f, 0.045f, 0.07f);
-        public static readonly Color IsletSand = new Color(0.2f, 0.17f, 0.13f);
-        public static readonly Color IsletRock = new Color(0.12f, 0.115f, 0.13f);
-        public static readonly Color IsletGreen = new Color(0.07f, 0.1f, 0.075f);
+        // Background: black space with small stars (see Backdrop).
+        public static readonly Color Star = new Color(0.78f, 0.84f, 1f);
 
         // HUD
         public static readonly Color HudText = new Color(0.82f, 0.9f, 0.95f);

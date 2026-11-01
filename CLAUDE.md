@@ -36,14 +36,16 @@ stages, enemies or art.
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
   loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
   on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
-  `Hud` is IMGUI. Field (X, Y) maps to world (x, 0, z); the ground is at y = −9.
+  `Hud` is IMGUI. Field (X, Y) maps to world (x, 0, z). The background (`Game/Art/Backdrop.cs`)
+  is black space with a parallax starfield at y = −14 (Rob's call, replacing the terrain and
+  ocean backdrops).
 - `Game/Art/` — models. Ships and enemies come from **Blender** (decided by Rob): FBX files in
   `Assets/Skyforge/Resources/Models/`, loaded by `ModelLibrary` (wraps each in a mount object and
   swaps materials by name for `Mats`). **docs/BLENDER.md** is the modelling brief: names, scale,
   orientation, mount points, materials, budgets, export settings. Until a Blender model exists the
   code-built fallback is used: `MeshBuilder` (flat-shaded facets, auto-wound faces),
   `VanguardModel` (player ship, nose +Z, pods change with the weapon), `EnemyModels`. Also
-  `Backdrop` (endless scrolling terrain), `InstancedBatch` (GPU-instanced bullets and particles),
+  `Backdrop` (starfield), `InstancedBatch` (GPU-instanced bullets and particles),
   `Mats` + `Palette` (the dark sci-fi colours). Blender sources live in `Art/Blender/`.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
 - `Tests/EditMode/SimulationTests.cs` — NUnit tests for the simulation.

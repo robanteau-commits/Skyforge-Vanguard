@@ -189,7 +189,7 @@ orbit and then onto the invaders' world, see §11.)
 
 | Stage | Name | Backdrop (scrolling ground) | New threat introduced | Length |
 |---|---|---|---|---|
-| 1-1 | **First Light** | Open ocean at dawn: a dark low-poly swell with rocky islets (Rob's pick from the backdrop concepts, 2026-11-01) | Gnats, Needles | 2.5 min |
+| 1-1 | **First Light** | Black space with a scrolling starfield (see §10.1) | Gnats, Needles | 2.5 min |
 | 1-2 | **Harbor Line** | Docks, cargo ships, cranes | Bastion turrets on ships | 2.5 min |
 | 1-3 | **Stormwall** | Ocean in a storm, lightning flashes | Spine Mines, Ram Drones | 3 min |
 | 1-4 | **Foundry Ridge** | Mountain refinery, smoke stacks | Wardens; first Brood Carrier as mid-boss | 3 min |
@@ -276,6 +276,10 @@ port stays possible.
 - **Palette:** gunmetal, slate and deep navy for ships and terrain; desaturated, darkened
   backgrounds so the action stands out. Emissive accents: **player cyan/white**, **enemy
   red/magenta**, **enemy bullets orange/pink**, **credits gold**, **repair orbs green**.
+- **Background (decided by Rob, 2026-11-01):** plain black with small, scattered stars that stream
+  from the top of the screen to the bottom in three parallax layers, giving the sense of flying
+  forward. This replaced the earlier scrolling terrain and ocean backdrops. The stage table's
+  backdrop column is the planned theming; each stage can later add its own distant elements.
 - URP bloom on emissive materials only; a little fog and parallax on the scrolling ground; simple
   particle sparks, explosions and debris chunks.
 - **Readability rule:** nothing in the background may be as bright or saturated as enemy bullets.

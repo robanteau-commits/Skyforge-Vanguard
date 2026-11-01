@@ -64,10 +64,9 @@ namespace Skyforge.Game
         public static Material Spark => Glow("spark", Palette.Spark, 4f);
         public static Material Debris => Lit("debris", Palette.EnemyPlate, 0.4f, 0.3f);
 
-        // Backdrop (stage 1-1: B · Open Ocean, darker)
-        public static Material Sea => Lit("sea", Palette.Sea, 0.15f, 0.72f);
-        public static Material IsletSand => Lit("isletSand", Palette.IsletSand, 0f, 0.1f);
-        public static Material IsletRock => Lit("isletRock", Palette.IsletRock, 0f, 0.15f);
-        public static Material IsletGreen => Lit("isletGreen", Palette.IsletGreen, 0f, 0.05f);
+        // Background stars: far ones dim, near ones just bright enough to bloom faintly.
+        public static Material StarFar => Glow("starFar", Palette.Star, 0.45f);
+        public static Material StarMid => Glow("starMid", Palette.Star, 0.8f);
+        public static Material StarNear => Glow("starNear", Palette.Star, 1.3f);
     }
 }
