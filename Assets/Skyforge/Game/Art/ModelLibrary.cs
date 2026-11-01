@@ -14,10 +14,19 @@ namespace Skyforge.Game
     /// are swapped, by material name, for the game's shared materials (<see cref="Mats"/>), so
     /// lighting and glow match everywhere.
     /// </para>
+    /// <para>
+    /// Orientation: models are built facing Blender −Y (docs/BLENDER.md §3) and exported −Z Forward /
+    /// Y Up. Unity's FBX import turns such a model to face −Z (the classic "Blender model faces
+    /// backwards" result; seen in v0.1.2 with the Vanguard pointing down the screen), so every model
+    /// is turned 180° about Y inside its mount to face +Z, the game's forward.
+    /// </para>
     /// </summary>
     public static class ModelLibrary
     {
         public const string Folder = "Models/";
+
+        /// <summary>Turns an imported Blender model to face the game's forward (+Z).</summary>
+        public static readonly Quaternion BlenderToGame = Quaternion.Euler(0f, 180f, 0f);
 
         static readonly Dictionary<string, GameObject> Prefabs = new Dictionary<string, GameObject>();
 
@@ -49,6 +58,9 @@ namespace Skyforge.Game
             mount.transform.SetParent(parent, false);
             var model = Object.Instantiate(prefab, mount.transform, false);
             model.name = name + " (model)";
+            var t = model.transform;
+            t.localPosition = BlenderToGame * t.localPosition;
+            t.localRotation = BlenderToGame * t.localRotation;
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
             {
                 r.shadowCastingMode = ShadowCastingMode.Off;

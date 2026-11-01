@@ -64,9 +64,21 @@ namespace Skyforge.Game
         public static Material Spark => Glow("spark", Palette.Spark, 4f);
         public static Material Debris => Lit("debris", Palette.EnemyPlate, 0.4f, 0.3f);
 
-        public static Material Water => Lit("water", Palette.Water, 0.1f, 0.75f);
-        public static Material Land => Lit("land", Palette.Land, 0f, 0.1f);
+        // Backdrop (stage 1-1: coastal city at dawn)
+        public static Material DeepWater => Lit("deepWater", Palette.DeepWater, 0.2f, 0.88f);
+        public static Material ShallowWater => Lit("shallowWater", Palette.ShallowWater, 0.15f, 0.8f);
+        public static Material Sand => Lit("sand", Palette.Sand, 0f, 0.1f);
+        public static Material Ground => Lit("ground", Palette.Ground, 0f, 0.15f);
+        public static Material Park => Lit("park", Palette.Park, 0f, 0.05f);
         public static Material Rock => Lit("rock", Palette.Rock, 0f, 0.15f);
-        public static Material CityLight => Glow("cityLight", Palette.CityLight, 2.2f);
+        public static Material Road => Lit("road", Palette.Road, 0f, 0.3f);
+        public static Material Building => Lit("building", Palette.Building, 0.2f, 0.35f);
+        public static Material Roof => Lit("roof", Palette.Roof, 0.1f, 0.25f);
+        public static Material Cloud => Lit("cloud", Palette.Cloud, 0f, 0f);
+        public static Material WindowLight => Glow("windowLight", Palette.WindowLight, 1.25f);
+        public static Material CityLight => Glow("cityLight", Palette.CityLight, 1.8f);
+        public static Material Beacon => Glow("beacon", Palette.Beacon, 2f);
+        public static Material CarHead => Glow("carHead", Palette.CarHead, 2.4f);
+        public static Material CarTail => Glow("carTail", Palette.CarTail, 1.8f);
     }
 }

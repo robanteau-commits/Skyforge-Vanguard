@@ -55,9 +55,12 @@ there).
   The ship's right wing (pilot's right) is at Blender **−X**, the left of the screen in Front
   view. The game camera looks down from above, so the **top surface matters most**.
 - Build symmetric ships with a **Mirror** modifier on X.
-- After the first export, check once in Unity that the nose points up the screen and the model
-  isn't mirrored or rotated. If it is, fix the export settings (§6), not the game code, and
-  update this section.
+- Unity's FBX import turns a model built this way to face backwards (−Z). The game corrects this
+  for every model by turning it 180° when loading (`ModelLibrary.BlenderToGame`), so keep
+  building nose to −Y and **don't** rotate models in Blender to compensate. This was found with the
+  first `vanguard` export (v0.1.2 pointed down the screen) and fixed in v0.1.3.
+- Left/right hasn't been checked with an asymmetric model yet. The first time you make one, check
+  in Unity that its right side is on the ship's right.
 
 ## 4. Sizes and mount points
 

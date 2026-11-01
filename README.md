@@ -6,7 +6,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M0, the test flight (v0.1.2)
+- **Status:** milestone M0, the test flight (v0.1.3)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
@@ -15,8 +15,9 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
 
 ## What's in M0 — test flight
-- The Vanguard (a delta-wing fighter built from code) flying over an endless, scrolling,
-  low-poly coastline at night.
+- The Vanguard (Blender model) flying over stage 1-1's backdrop: an endless low-poly coastal
+  city at dawn, with the ocean, a beach, a highway with moving car lights, lit buildings, hills
+  and low clouds.
 - Pulse Repeater on both wings, firing automatically; its pods change shape with the level.
 - Unarmed practice drones to shoot, with explosions, a score and a kill count.
 - Controls: the ship follows the mouse; WASD / arrows; gamepad stick; touch drag. Shift / right
