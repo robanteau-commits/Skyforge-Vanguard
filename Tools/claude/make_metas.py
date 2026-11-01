@@ -1,14 +1,20 @@
-"""Creates missing Unity .meta files for everything under Assets/ (random GUIDs).
+"""Creates missing Unity .meta files for folders, scripts, asmdefs and text files under Assets/.
 
-Unity writes these itself when it imports a new file, but the editor runs on Rob's PC, so files
-added from elsewhere (e.g. a cloud session) need their .meta committed alongside them; otherwise
-each machine invents its own GUIDs. Run from the repo root: python Tools/claude/make_metas.py
+Unity writes these itself when it imports a new file, but code added from a cloud session (no
+Unity) needs its .meta committed alongside it; otherwise each machine invents its own GUIDs.
+Run from the repo root: python Tools/claude/make_metas.py
+
+Models, textures, audio and other imported assets are SKIPPED: their .meta holds importer
+settings this script can't write correctly. Let Unity import them (open the Editor), then commit
+the .meta it creates.
 """
 import os
 import uuid
 
 ROOT = 'Assets'
 SKIP_EXT = {'.meta'}
+# Only these get a .meta from this script; everything else waits for Unity.
+HANDLED_EXT = {'.cs', '.asmdef', '.txt', '.md', '.json', '.xml', '.csv'}
 
 SCRIPT = """fileFormatVersion: 2
 guid: {guid}
@@ -76,7 +82,12 @@ def main():
         dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != 'Temp']
         entries = [(d, True) for d in dirnames] + [(f, False) for f in filenames]
         for name, is_dir in entries:
-            if name.startswith('.') or os.path.splitext(name)[1] in SKIP_EXT:
+            ext = os.path.splitext(name)[1].lower()
+            if name.startswith('.') or ext in SKIP_EXT:
+                continue
+            if not is_dir and ext not in HANDLED_EXT:
+                if not os.path.exists(os.path.join(dirpath, name + '.meta')):
+                    print('skipped (let Unity create its .meta):', os.path.join(dirpath, name))
                 continue
             path = os.path.join(dirpath, name)
             meta = path + '.meta'

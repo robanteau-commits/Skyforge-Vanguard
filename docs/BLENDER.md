@@ -22,7 +22,11 @@ the game always runs.
 5. Export the FBX to `Assets/Skyforge/Resources/Models/<name>.fbx` (§6).
 6. Check it in the game: open Unity, press **Play**, and look at it from the game camera. Fix
    the scale or orientation if it's off.
-7. Commit the `.blend`, the `.fbx` **and** the `.fbx.meta` that Unity creates, then push to `main`.
+7. Commit the `.blend`, the `.fbx` **and** the `.fbx.meta` that **Unity** creates when it imports
+   the model, then push to `main`. Don't write that `.meta` by hand or with
+   `Tools/claude/make_metas.py`, which skips models on purpose. Its first line under the GUID must
+   read `ModelImporter:`. If it says `DefaultImporter:`, let Unity reimport the model
+   (right-click it → Reimport) and commit the rewritten file.
 
 Terrain, bullets and explosion particles stay code-built: they're tiny or endless.
 
