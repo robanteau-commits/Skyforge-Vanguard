@@ -172,7 +172,8 @@ namespace Skyforge.Simulation.Tests
                 sim.Step(PlayerInput.Move(x, 0f));
             }
             Assert.Greater(sim.Kills, 5);
-            Assert.AreEqual(sim.Kills * (long)StageSim.PracticeDroneScore, sim.Score);
+            // Each kill scores the drone's 50 points times the combo (at least ×1.0).
+            Assert.GreaterOrEqual(sim.Score, sim.Kills * (long)EnemyDefs.PracticeDrone.Score);
         }
 
         [Test]

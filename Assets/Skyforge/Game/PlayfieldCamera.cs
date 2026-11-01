@@ -21,6 +21,11 @@ namespace Skyforge.Game
         public Camera Cam { get; private set; }
         Camera _backdropClear;
         int _lastW, _lastH;
+        Vector3 _basePos;
+        float _shake;
+
+        /// <summary>Jolt the view (hull hits, explosions). Stronger calls override weaker ones.</summary>
+        public void Shake(float amount) => _shake = Mathf.Max(_shake, amount);
 
         /// <summary>The play field's viewport in screen pixels (origin bottom-left).</summary>
         public Rect PixelRect => Cam.pixelRect;
@@ -59,6 +64,16 @@ namespace Skyforge.Game
         void LateUpdate()
         {
             if (Screen.width != _lastW || Screen.height != _lastH) Fit();
+            if (_shake > 0f)
+            {
+                _shake = Mathf.Max(0f, _shake - Time.unscaledDeltaTime * 2.5f);
+                var r = Random.insideUnitCircle * _shake;
+                transform.position = _basePos + new Vector3(r.x, 0f, r.y);
+            }
+            else
+            {
+                transform.position = _basePos;
+            }
         }
 
         /// <summary>Recompute the viewport and camera placement for the current screen size.</summary>
@@ -108,6 +123,7 @@ namespace Skyforge.Game
                 aimZ += imbalance * Field.Height * 0.8f;
             }
             transform.position = new Vector3(0f, 0f, aimZ) - fwd * dist;
+            _basePos = transform.position;
         }
 
         bool FieldFits()

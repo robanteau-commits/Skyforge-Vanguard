@@ -28,7 +28,7 @@ namespace Skyforge.Game
             public Layer(Mesh mesh, Material mat) { Batch = new InstancedBatch(mesh, mat); }
         }
 
-        readonly Layer _flash, _ember, _debris, _muzzle;
+        readonly Layer _flash, _ember, _debris, _muzzle, _enemyFlash, _gold, _green;
         readonly List<Mesh> _meshes = new List<Mesh>();
 
         public Fx()
@@ -39,6 +39,21 @@ namespace Skyforge.Game
             _ember = new Layer(ball, Mats.Spark);
             _debris = new Layer(shard, Mats.Debris);
             _muzzle = new Layer(ball, Mats.PlayerGlow);
+            _enemyFlash = new Layer(ball, Mats.Telegraph);
+            _gold = new Layer(ball, Mats.Credit);
+            _green = new Layer(ball, Mats.Repair);
+        }
+
+        /// <summary>Explosion size for an enemy kind (roughly its radius).</summary>
+        static float BlastScale(EnemyKind kind)
+        {
+            switch (kind)
+            {
+                case EnemyKind.Warden: return 2.2f;
+                case EnemyKind.Bastion: return 1.5f;
+                case EnemyKind.Gnat: return 0.75f;
+                default: return 1f;
+            }
         }
 
         Mesh Octa(float r)
@@ -76,7 +91,40 @@ namespace Skyforge.Game
                             Spawn(_ember, ToWorld(e.Pos, 0.1f), RandomDir(4f, 9f) + new Vector3(0, 0, -2f), 0.18f, 0.07f, 0);
                         break;
                     case SimEventType.Destroyed:
-                        Explode(ToWorld(e.Pos), 1f);
+                        Explode(ToWorld(e.Pos), BlastScale(e.EnemyKind));
+                        break;
+                    case SimEventType.EnemyFired:
+                        Spawn(_enemyFlash, ToWorld(e.Pos, 0.3f), Vector3.zero, 0.08f, 0.3f, 1);
+                        break;
+                    case SimEventType.MineBurst:
+                        Spawn(_enemyFlash, ToWorld(e.Pos, 0.3f), Vector3.zero, 0.25f, 1.2f, 1);
+                        for (int i = 0; i < 8; i++)
+                            Spawn(_ember, ToWorld(e.Pos), RandomDir(5f, 10f), 0.25f, 0.08f, 0, 3f);
+                        break;
+                    case SimEventType.ShieldHit:
+                        // A ring of cyan sparks around the ship.
+                        for (int i = 0; i < 14; i++)
+                        {
+                            float a = i * Mathf.PI * 2f / 14f;
+                            var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                            Spawn(_muzzle, ToWorld(e.Pos) + dir * 1.3f, dir * 4f, 0.22f, 0.1f, 0, 4f);
+                        }
+                        break;
+                    case SimEventType.HullHit:
+                        Spawn(_flash, ToWorld(e.Pos, 0.2f), Vector3.zero, 0.15f, 0.6f, 1);
+                        for (int i = 0; i < 10; i++)
+                            Spawn(_ember, ToWorld(e.Pos), RandomDir(5f, 12f), 0.3f, 0.09f, 0, 3f);
+                        for (int i = 0; i < 4; i++)
+                            Spawn(_debris, ToWorld(e.Pos), RandomDir(3f, 6f), 0.5f, 0.1f, 0, 1.5f);
+                        break;
+                    case SimEventType.PlayerDestroyed:
+                        Explode(ToWorld(e.Pos), 2.4f);
+                        for (int i = 0; i < 16; i++)
+                            Spawn(_muzzle, ToWorld(e.Pos), RandomDir(6f, 15f), Random.Range(0.3f, 0.6f), 0.12f, 0, 2f);
+                        break;
+                    case SimEventType.Collected:
+                        var layer = e.PickupKind == PickupKind.Repair ? _green : _gold;
+                        Spawn(layer, ToWorld(e.Pos, 0.2f), Vector3.zero, 0.15f, e.PickupKind == PickupKind.Repair ? 0.7f : 0.35f, 1);
                         break;
                 }
             }
@@ -117,6 +165,9 @@ namespace Skyforge.Game
             Update(_ember, dt);
             Update(_debris, dt);
             Update(_muzzle, dt);
+            Update(_enemyFlash, dt);
+            Update(_gold, dt);
+            Update(_green, dt);
         }
 
         static void Update(Layer layer, float dt)
@@ -144,6 +195,7 @@ namespace Skyforge.Game
         public void Clear()
         {
             _flash.Items.Clear(); _ember.Items.Clear(); _debris.Items.Clear(); _muzzle.Items.Clear();
+            _enemyFlash.Items.Clear(); _gold.Items.Clear(); _green.Items.Clear();
         }
 
         public void Dispose()

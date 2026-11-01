@@ -22,6 +22,9 @@ namespace Skyforge.Game
         public bool Paused { get; private set; }
 
         Loadout _loadout = Loadout.Starter();
+        /// <summary>The stage to fly; null = practice drones.</summary>
+        StageDef _stage = Stages.FirstLight;
+        Asteroids _asteroids;
         Transform _world;
         Backdrop _backdrop;
         ShipView _ship;
@@ -69,6 +72,7 @@ namespace Skyforge.Game
             _backdrop = new GameObject("Backdrop").AddComponent<Backdrop>();
             _backdrop.transform.SetParent(_world, false);
             _enemies = new EnemyViews(_world);
+            _asteroids = new Asteroids(_world);
             _shots = new ShotRenderer();
             _fx = new Fx();
             gameObject.AddComponent<Hud>().Init(this);
@@ -112,12 +116,13 @@ namespace Skyforge.Game
 
         void StartStage()
         {
-            Sim = new StageSim(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = _loadout });
+            Sim = new StageSim(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = _loadout, Stage = _stage });
             _prevShipPos = Sim.Player.Pos;
             _accumulator = 0f;
             _pendingDrag = Vec2.Zero;
             _pendingCore = false;
             _enemies.Clear();
+            _asteroids.Clear();
             _fx.Clear();
             if (_ship == null) _ship = new ShipView(_world, _loadout);
             else _ship.RefitPods(_loadout);
@@ -144,6 +149,15 @@ namespace Skyforge.Game
             if (PlayerControls.RestartPressed()) StartStage();
             int level = PlayerControls.LevelKeyPressed();
             if (level > 0) SetWeaponLevel(level);
+            int stageKey = PlayerControls.StageKeyPressed();
+            if (stageKey > 0)
+            {
+                _stage = stageKey == 6 ? Stages.FirstLight : stageKey == 7 ? Stages.ArmadaSampler : null;
+                StartStage();
+            }
+            // On the results screen, any confirm flies again.
+            if (Sim.Status != StageStatus.Playing && Sim.TimeSinceEnd >= Hud.ResultsDelay + 0.3f && PlayerControls.ConfirmPressed())
+                StartStage();
 
             float dt = Mathf.Min(Time.deltaTime, MaxFrameTime);
             if (!Paused)
@@ -166,6 +180,13 @@ namespace Skyforge.Game
                     Sim.Step(step);
                     _enemies.AfterStep(Sim);
                     _fx.Consume(Sim.Events);
+                    _asteroids.Consume(Sim.Events, Sim.Time);
+                    foreach (var ev in Sim.Events)
+                    {
+                        if (ev.Type == SimEventType.HullHit) View.Shake(0.35f);
+                        else if (ev.Type == SimEventType.PlayerDestroyed) View.Shake(0.8f);
+                        else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Warden) View.Shake(0.5f);
+                    }
                     _accumulator -= Field.Dt;
                 }
             }
@@ -177,9 +198,13 @@ namespace Skyforge.Game
                 Mathf.Lerp(_prevShipPos.X, Sim.Player.Pos.X, alpha),
                 Mathf.Lerp(_prevShipPos.Y, Sim.Player.Pos.Y, alpha));
             _ship.Update(shipPos, Sim.Player.Velocity, Sim.Player.MaxSpeed, Paused ? 0f : dt, renderTime);
+            // Hidden once destroyed; flickers while invulnerable after a hit.
+            bool flicker = Sim.Player.Invulnerable > 0f && Mathf.FloorToInt(renderTime * 20f) % 2 == 0;
+            _ship.SetVisible(Sim.Player.Alive && !flicker);
             _backdrop.SetTime(renderTime);
+            _asteroids.Render(renderTime);
             _enemies.Render(alpha, Paused ? 0f : dt);
-            _shots.Draw(Sim, (1f - alpha) * Field.Dt);
+            _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime);
             _fx.Tick(Paused ? 0f : dt);
         }
 
@@ -201,6 +226,8 @@ namespace Skyforge.Game
         {
             _shots?.Dispose();
             _fx?.Dispose();
+            _enemies?.Dispose();
+            _asteroids?.Dispose();
         }
     }
 }

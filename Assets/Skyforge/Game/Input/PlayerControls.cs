@@ -135,5 +135,26 @@ namespace Skyforge.Game
         }
 
         public static bool RestartPressed() => Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame;
+
+        /// <summary>Test keys: 6 = stage 1-1, 7 = Armada Sampler, 8 = practice flight; else 0.</summary>
+        public static int StageKeyPressed()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return 0;
+            if (kb.digit6Key.wasPressedThisFrame) return 6;
+            if (kb.digit7Key.wasPressedThisFrame) return 7;
+            if (kb.digit8Key.wasPressedThisFrame) return 8;
+            return 0;
+        }
+
+        /// <summary>Any click, tap, Space, Enter or gamepad A this frame (e.g. "fly again").</summary>
+        public static bool ConfirmPressed()
+        {
+            var kb = Keyboard.current; var mouse = Mouse.current; var pad = Gamepad.current; var touch = Touchscreen.current;
+            return (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame)) ||
+                   (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
+                   (pad != null && pad.buttonSouth.wasPressedThisFrame) ||
+                   (touch != null && touch.primaryTouch.press.wasPressedThisFrame);
+        }
     }
 }

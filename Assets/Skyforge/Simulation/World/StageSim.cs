@@ -7,38 +7,67 @@ namespace Skyforge.Simulation
     {
         public uint Seed = 1;
         public Loadout Loadout = Loadout.Starter();
-        /// <summary>Spawn unarmed target drones (the M0 test flight).</summary>
-        public bool PracticeDrones = true;
+        /// <summary>The stage to play; null = the practice flight (unarmed target drones).</summary>
+        public StageDef Stage;
+        /// <summary>Spawn unarmed target drones. Defaults to on when there's no stage.</summary>
+        public bool? PracticeDrones;
     }
 
     /// <summary>
     /// One running stage. Plain C#, no engine types: the Unity layer reads this state and draws it,
-    /// and only changes it through <see cref="Step"/>. Split into partial files by topic.
+    /// and only changes it through <see cref="Step"/>. Split into partial files by topic:
+    /// Player (movement), Weapons (player fire), Enemies (behaviour), Combat (enemy fire, damage,
+    /// pickups), Timeline (spawning and the end of the stage), Practice (target drones).
     /// Same setup + same inputs ⇒ same result (see <see cref="ComputeHash"/>).
     /// </summary>
     public sealed partial class StageSim
     {
         public readonly StageSetup Setup;
         public readonly Loadout Loadout;
+        public readonly StageDef Stage;
         public readonly PlayerShip Player = new PlayerShip();
         public readonly List<Shot> Shots = new List<Shot>(512);
+        public readonly List<EnemyShot> EnemyShots = new List<EnemyShot>(512);
         public readonly List<Enemy> Enemies = new List<Enemy>(64);
+        public readonly List<Pickup> Pickups = new List<Pickup>(128);
         /// <summary>What happened during the last step (cleared at the start of each step).</summary>
         public readonly List<SimEvent> Events = new List<SimEvent>(64);
         readonly Rng _rng;
+        readonly bool _practice;
 
         /// <summary>Steps taken so far.</summary>
         public int Tick { get; private set; }
         public float Time => Tick * Field.Dt;
+        public StageStatus Status { get; private set; } = StageStatus.Playing;
+        /// <summary>Seconds since the stage was cleared or failed (0 while playing).</summary>
+        public float TimeSinceEnd { get; private set; }
         public long Score { get; private set; }
         public int Kills { get; private set; }
+        /// <summary>Stage enemies spawned so far (the kill percentage is out of these).</summary>
+        public int Spawned { get; private set; }
+        /// <summary>Credits collected this stage.</summary>
+        public int Credits { get; private set; }
+        /// <summary>Total hull damage taken (the Untouched medal needs 0).</summary>
+        public float HullDamageTaken { get; private set; }
+
+        /// <summary>Score multiplier in tenths (10 = ×1.0 … 50 = ×5.0), kept as an integer so it never drifts.</summary>
+        public int ComboTenths { get; private set; } = 10;
+        public float Combo => ComboTenths / 10f;
+        float _comboIdle;
 
         int _nextEnemyId = 1;
+        int _nextPickupId = 1;
+
+        // Combo rules (docs/DESIGN.md §7).
+        public const int ComboMaxTenths = 50;
+        public const float ComboDecaySeconds = 2.5f;
 
         public StageSim(StageSetup setup = null)
         {
             Setup = setup ?? new StageSetup();
             Loadout = Setup.Loadout ?? Loadout.Starter();
+            Stage = Setup.Stage;
+            _practice = Setup.PracticeDrones ?? Stage == null;
             _rng = new Rng(Setup.Seed);
             Player.Pos = new Vec2(0f, -10f);
             // Offset the right wing by half a shot so the two wings alternate.
@@ -46,59 +75,94 @@ namespace Skyforge.Simulation
             if (right != null) Player.RightCooldown = 0.5f / right.ShotsPerSecond;
         }
 
+        /// <summary>Kill percentage (0..100) of the stage enemies spawned so far.</summary>
+        public int KillPercent => Spawned == 0 ? 0 : (int)(Kills * 100L / Spawned);
+
+        /// <summary>Credits kept: all of them on a clear, half on a failed run (decided by Rob).</summary>
+        public int CreditsBanked => Status == StageStatus.Failed ? Credits / 2 : Credits;
+
         /// <summary>Advance the stage by one fixed step (<see cref="Field.Dt"/>).</summary>
         public void Step(PlayerInput input)
         {
             Events.Clear();
             Tick++;
-            MovePlayer(input);
-            FireWings();
-            if (Setup.PracticeDrones) UpdatePracticeDrones();
-            MoveEnemies();
+            if (Status != StageStatus.Playing) TimeSinceEnd += Field.Dt;
+
+            if (Player.Alive)
+            {
+                MovePlayer(input);
+                FireWings();
+            }
+            UpdateDefences();
+            if (Status == StageStatus.Playing) RunTimeline();
+            if (_practice) UpdatePracticeDrones();
+            UpdateEnemies();
             MoveShots();
+            MoveEnemyShots();
+            UpdatePickups();
+            UpdateCombo();
+            Enemies.RemoveAll(e => e.Dead || Field.IsOutside(e.Pos, 6f));
+            CheckStageEnd();
         }
 
-        void AddScore(int points) => Score += points;
-
-        Enemy SpawnEnemy(EnemyKind kind, Vec2 pos, Vec2 vel, float hp, float radius, int score)
+        Enemy SpawnEnemy(EnemyDef def, Vec2 pos, bool counted)
         {
             var e = new Enemy
             {
                 Id = _nextEnemyId++,
-                Kind = kind,
+                Kind = def.Kind,
+                Def = def,
                 Pos = pos,
                 BaseX = pos.X,
-                Vel = vel,
-                Hp = hp,
-                MaxHp = hp,
-                Radius = radius,
-                Score = score,
+                StartY = pos.Y,
+                Hp = def.Hp,
+                MaxHp = def.Hp,
+                Radius = def.Radius,
+                Score = def.Score,
                 Phase = _rng.Range(0f, 6.2831853f),
+                Counted = counted,
             };
             Enemies.Add(e);
+            if (counted) Spawned++;
             return e;
         }
 
-        void MoveEnemies()
+        /// <summary>Damage an enemy; destroys it (with score, drops, effects) at 0 HP. True if it died.</summary>
+        bool DamageEnemy(Enemy e, float damage, Vec2 at)
         {
-            for (int i = 0; i < Enemies.Count; i++)
+            if (e.Dead) return false;
+            e.Hp -= damage;
+            if (e.Hp > 0f)
             {
-                var e = Enemies[i];
-                e.Age += Field.Dt;
-                switch (e.Kind)
-                {
-                    case EnemyKind.PracticeDrone: MovePracticeDrone(e); break;
-                }
+                Events.Add(new SimEvent { Type = SimEventType.Hit, Pos = at, EnemyKind = e.Kind, EnemyId = e.Id });
+                return false;
             }
-            // Drop enemies that left the field (no score).
-            Enemies.RemoveAll(e => e.Pos.Y < -Field.HalfHeight - Field.CullMargin || Field.IsOutside(e.Pos, 6f));
+            Kill(e);
+            return true;
         }
 
         void Kill(Enemy e)
         {
+            e.Dead = true;
             Kills++;
-            AddScore(e.Score);
-            Events.Add(new SimEvent { Type = SimEventType.Destroyed, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id });
+            long points = (long)e.Score * ComboTenths / 10;
+            Score += points;
+            ComboTenths = ComboTenths + 1 > ComboMaxTenths ? ComboMaxTenths : ComboTenths + 1;
+            _comboIdle = 0f;
+            Events.Add(new SimEvent { Type = SimEventType.Destroyed, Pos = e.Pos, EnemyKind = e.Kind, EnemyId = e.Id, Value = points });
+            DropLoot(e);
+            if (e.Kind == EnemyKind.SpineMine) MineBurst(e);
+        }
+
+        void UpdateCombo()
+        {
+            if (ComboTenths <= 10) { _comboIdle = 0f; return; }
+            _comboIdle += Field.Dt;
+            if (_comboIdle >= ComboDecaySeconds)
+            {
+                ComboTenths = ComboTenths - 10 < 10 ? 10 : ComboTenths - 10;
+                _comboIdle = 0f;
+            }
         }
 
         /// <summary>
@@ -109,12 +173,24 @@ namespace Skyforge.Simulation
         public ulong ComputeHash()
         {
             var h = new Hasher();
-            h.Add(Tick); h.Add(Score); h.Add(Kills); h.Add(_rng.State); h.Add(_nextEnemyId);
-            h.Add(Player.Pos); h.Add(Player.LeftCooldown); h.Add(Player.RightCooldown);
+            h.Add(Tick); h.Add(Score); h.Add(Kills); h.Add(Spawned); h.Add(Credits); h.Add(ComboTenths); h.Add(_comboIdle);
+            h.Add(HullDamageTaken); h.Add((int)Status); h.Add(_rng.State); h.Add(_nextEnemyId); h.Add(_nextPickupId);
+            h.Add(_nextOrder); h.Add(_droneTimer);
+            var p = Player;
+            h.Add(p.Pos); h.Add(p.LeftCooldown); h.Add(p.RightCooldown); h.Add(p.Alive ? 1 : 0);
+            h.Add(p.Hull); h.Add(p.Shield); h.Add(p.ShieldRegenWait); h.Add(p.Invulnerable);
             h.Add(Shots.Count);
             foreach (var s in Shots) { h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); }
+            h.Add(EnemyShots.Count);
+            foreach (var s in EnemyShots) { h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); }
             h.Add(Enemies.Count);
-            foreach (var e in Enemies) { h.Add(e.Id); h.Add((int)e.Kind); h.Add(e.Pos); h.Add(e.Hp); h.Add(e.Age); }
+            foreach (var e in Enemies)
+            {
+                h.Add(e.Id); h.Add((int)e.Kind); h.Add(e.Pos); h.Add(e.Vel); h.Add(e.Hp); h.Add(e.Age);
+                h.Add(e.Mode); h.Add(e.Timer); h.Add(e.Counter); h.Add(e.Target); h.Add(e.Facing);
+            }
+            h.Add(Pickups.Count);
+            foreach (var k in Pickups) { h.Add(k.Id); h.Add(k.Pos); h.Add(k.Vel); h.Add(k.Value); h.Add(k.Homing ? 1 : 0); }
             return h.Value;
         }
 

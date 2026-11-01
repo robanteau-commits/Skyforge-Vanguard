@@ -67,18 +67,10 @@ namespace Skyforge.Simulation
             for (int i = 0; i < Enemies.Count; i++)
             {
                 var e = Enemies[i];
+                if (e.Dead) continue;
                 float r = e.Radius + s.Radius;
                 if (Vec2.DistanceSq(e.Pos, s.Pos) > r * r) continue;
-                e.Hp -= s.Damage;
-                if (e.Hp <= 0f)
-                {
-                    Kill(e);
-                    Enemies.RemoveAt(i);
-                }
-                else
-                {
-                    Events.Add(new SimEvent { Type = SimEventType.Hit, Pos = s.Pos, EnemyKind = e.Kind, EnemyId = e.Id });
-                }
+                DamageEnemy(e, s.Damage, s.Pos);
                 return true;
             }
             return false;

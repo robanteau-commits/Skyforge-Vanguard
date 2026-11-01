@@ -3,16 +3,13 @@ using System;
 namespace Skyforge.Simulation
 {
     /// <summary>
-    /// Unarmed target drones for the M0 test flight: they drift down the screen in a lazy weave
-    /// so there's something to shoot. Replaced by real stage waves in M1.
+    /// Unarmed target drones for the practice flight (no stage): they drift down the screen in a
+    /// lazy weave so there's something to shoot.
     /// </summary>
     public sealed partial class StageSim
     {
         public const int PracticeDroneMax = 7;
         public const float PracticeDroneInterval = 1.1f;
-        public const float PracticeDroneHp = 12f;
-        public const float PracticeDroneRadius = 0.75f;
-        public const int PracticeDroneScore = 50;
 
         float _droneTimer = 1f;
 
@@ -23,11 +20,11 @@ namespace Skyforge.Simulation
             _droneTimer += PracticeDroneInterval;
             int alive = 0;
             foreach (var e in Enemies)
-                if (e.Kind == EnemyKind.PracticeDrone) alive++;
+                if (e.Kind == EnemyKind.PracticeDrone && !e.Dead) alive++;
             if (alive >= PracticeDroneMax) return;
             var pos = new Vec2(_rng.Range(-7f, 7f), Field.HalfHeight + 1.5f);
-            SpawnEnemy(EnemyKind.PracticeDrone, pos, new Vec2(0f, -_rng.Range(3f, 4.5f)),
-                PracticeDroneHp, PracticeDroneRadius, PracticeDroneScore);
+            var d = SpawnEnemy(EnemyDefs.PracticeDrone, pos, counted: false);
+            d.Vel = new Vec2(0f, -_rng.Range(3f, 4.5f));
         }
 
         static void MovePracticeDrone(Enemy e)

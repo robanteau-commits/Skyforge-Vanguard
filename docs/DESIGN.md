@@ -162,7 +162,7 @@ orange/pink with a dark outline**, the brightest things on screen, so they alway
 | **Ram Drone** | Kamikaze | 14 | Locks onto you after 0.7 s and charges (telegraphed by a red flash) | None; 25 ram damage | 100 | 4 |
 | **Spine Mine** | Mine | 10 | Drifts with the scroll; when shot or approached within 2 u it bursts into an 8-bullet ring | Ring on death | 60 | 2 |
 | **Warden** | Gunship | 160 | Slow, armoured, stays on screen for a while | Rotating rings and fans | 600 | 20 |
-| **Bastion** | Turret (on the ground or on a sea platform) | 90 | Scrolls past fixed to the terrain and turns to track you | Aimed bursts | 400 | 12 |
+| **Bastion** | Turret on a drifting asteroid (Rob's call, 2026-11-01: the background is space, so no ground) | 90 | Drifts down the screen with its asteroid and turns to track you | Aimed 3-shot bursts | 400 | 12 |
 | **Brood Carrier** | Mini-boss | 700 | Crosses slowly, launching Gnats; it has 2 destructible launch bays | Spread bursts | 2500 | 80 |
 
 **Bullet rules (Normal):** enemy bullet speed 6–10 u/s, at most ~250 enemy bullets on screen in
@@ -189,8 +189,8 @@ orbit and then onto the invaders' world, see §11.)
 
 | Stage | Name | Backdrop (scrolling ground) | New threat introduced | Length |
 |---|---|---|---|---|
-| 1-1 | **First Light** | Black space with a scrolling starfield (see §10.1) | Gnats, Needles | 2.5 min |
-| 1-2 | **Harbor Line** | Docks, cargo ships, cranes | Bastion turrets on ships | 2.5 min |
+| 1-1 | **First Light** | Black space with a scrolling starfield (see §10.1) | Gnats, Needles; the first Warden closes the stage | 2.5 min |
+| 1-2 | **Harbor Line** | Docks, cargo ships, cranes | Bastion turrets on drifting asteroids | 2.5 min |
 | 1-3 | **Stormwall** | Ocean in a storm, lightning flashes | Spine Mines, Ram Drones | 3 min |
 | 1-4 | **Foundry Ridge** | Mountain refinery, smoke stacks | Wardens; first Brood Carrier as mid-boss | 3 min |
 | 1-5 | **Upper Air** | Above the clouds at dusk, the Armada's mothership on the horizon | Mixed waves, the hardest regular stage | 3.5 min |
@@ -326,7 +326,7 @@ port stays possible.
 | # | Milestone | You can play… |
 |---|---|---|
 | M0 | Project scaffold, scene, camera, ship flying, Pulse Repeater | Fly and shoot in an empty sky |
-| M1 | Enemies, bullets, damage, shield and hull, stage timeline; stage 1-1 | A full first stage |
+| M1 | Enemies, bullets, damage, shield and hull, stage timeline; stage 1-1 (done in v0.2.0) | A full first stage |
 | M2 | All 8 wing weapons and the core specials, the hangar loadout screen | Try every loadout on 1-1 |
 | M3 | Credits, shop, upgrades, results screen, medals, saves, world map | The full loop |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | All of World 1 |

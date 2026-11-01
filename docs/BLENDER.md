@@ -41,12 +41,19 @@ The file name is the model's id. The game looks for exactly these names.
 | `vanguard_flame` | One engine flame (used twice). The game stretches it along its length. | code flame |
 | `pod_pulseRepeater_lv1` … `_lv5` | Pulse Repeater wing pod at each level: 1, 2, 2, 3, 3 barrels. A missing level uses the nearest lower one; `pod_pulseRepeater` with no level works for all. | code pod |
 | `enemy_practiceDrone` | Unarmed target drone (M0). | code drone |
+| `enemy_gnat` | Swarm fighter, small arrowhead. Hit radius 0.55. | code Gnat |
+| `enemy_needle` | Diving fighter, long and thin. Hit radius 0.6. | code Needle |
+| `enemy_ramDrone` | Kamikaze, spiked wedge. Hit radius 0.6. | code Ram Drone |
+| `enemy_spineMine` | Spiked mine. Hit radius 0.6. Spins slowly. | code mine |
+| `enemy_warden` | Gunship, broad and armoured. Hit radius 1.5. | code Warden |
+| `enemy_bastion` | Turret with one heavy barrel pointing forward (the whole model turns to aim). Hit radius 0.9. | code turret |
+| `prop_asteroid` | The rock a Bastion rides on, about 4–5 across and 2 tall, its top just below the turret's base. Origin at its centre; the game places it 1.4 below the play plane. | code asteroid |
 
 Later ones follow the same pattern. Pods use the weapon ids from `Simulation/Content/Weapons.cs`:
 `pod_scatterCannon_lv1`, `pod_lanceDriver_lv1`, … Enemies are `enemy_` plus the kind in camelCase:
-`enemy_gnat`, `enemy_needle`, `enemy_ramDrone`, `enemy_spineMine`, `enemy_warden`,
-`enemy_bastion`, `enemy_broodCarrier`, `enemy_tidebreaker` (boss parts to be agreed when we get
-there).
+`enemy_broodCarrier`, `enemy_tidebreaker` (boss parts to be agreed when we get there).
+Enemy models face forward like the ship (nose to Blender −Y); the game turns them to face where
+they're flying, which is usually down the screen.
 
 ## 3. Scale and orientation
 
@@ -119,5 +126,7 @@ Unity applies the matching import settings automatically to anything in
 2. `vanguard_core`, `vanguard_flame`.
 3. `pod_pulseRepeater_lv1` … `_lv5`.
 4. `enemy_practiceDrone`.
-5. Then each new enemy or weapon as the milestones need it (M1: Gnat, Needle, Ram Drone, Spine
-   Mine, Warden, Bastion).
+5. The M1 enemies, now in the game with code-built stand-ins: `enemy_gnat`, `enemy_needle`,
+   `enemy_ramDrone`, `enemy_spineMine`, `enemy_warden`, `enemy_bastion`, `prop_asteroid`.
+   Press **7** in the game for the Armada Sampler, which shows every enemy.
+6. Then each new enemy or weapon as the milestones need it.

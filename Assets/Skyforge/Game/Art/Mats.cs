@@ -63,6 +63,13 @@ namespace Skyforge.Game
         public static Material Explosion => Glow("explosion", Palette.Explosion, 5f);
         public static Material Spark => Glow("spark", Palette.Spark, 4f);
         public static Material Debris => Lit("debris", Palette.EnemyPlate, 0.4f, 0.3f);
+        public static Material EnemyBullet => Glow("enemyBullet", Palette.EnemyBullet, 3.5f);
+        public static Material BulletRim => Glow("bulletRim", Palette.BulletRim, 1f);
+        public static Material Telegraph => Glow("telegraph", Palette.Telegraph, 4f);
+        public static Material Credit => Glow("credit", Palette.Credit, 2.5f);
+        public static Material Repair => Glow("repair", Palette.Repair, 2.5f);
+        public static Material Asteroid => Lit("asteroid", Palette.Asteroid, 0f, 0.1f);
+        public static Material AsteroidDark => Lit("asteroidDark", Palette.AsteroidDark, 0f, 0.1f);
 
         // Background stars: far ones dim, near ones just bright enough to bloom faintly.
         public static Material StarFar => Glow("starFar", Palette.Star, 0.45f);

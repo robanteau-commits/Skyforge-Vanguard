@@ -30,9 +30,12 @@ stages, enemies or art.
   own GUIDs).
 
 ## Layout
-- `Simulation/World/StageSim*.cs` — one partial class split by topic (Player movement, Weapons,
-  Practice drones…). `Field` = the 18 × 32 play field (X right, Y up the screen).
-  `Simulation/Content/` — weapon definitions (`Weapons.cs`).
+- `Simulation/World/StageSim*.cs` — one partial class split by topic: Player (movement), Weapons
+  (player fire), Enemies (per-kind behaviour, telegraphs, contact), Combat (enemy fire, shield/hull
+  damage, pickups), Timeline (spawning, cleared/failed), Practice (target drones).
+  `Field` = the 18 × 32 play field (X right, Y up the screen). `Simulation/Content/` — weapons
+  (`Weapons.cs`), enemy stats (`Enemies.cs`, `EnemyDefs`), stage timelines (`Stages.cs`, written
+  with `StageBuilder`: 1-1 First Light and the Armada Sampler test stage).
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
   loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
   on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
@@ -48,7 +51,8 @@ stages, enemies or art.
   `Backdrop` (starfield), `InstancedBatch` (GPU-instanced bullets and particles),
   `Mats` + `Palette` (the dark sci-fi colours). Blender sources live in `Art/Blender/`.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
-- `Tests/EditMode/SimulationTests.cs` — NUnit tests for the simulation.
+- `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism) and
+  `StageTests` (enemies, damage, combo, pickups, stage flow).
 
 ## Verifying changes
 - **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:

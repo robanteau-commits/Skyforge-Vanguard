@@ -21,6 +21,9 @@ namespace Skyforge.Simulation
         public const float ShipMinY = -14.5f;
         public const float ShipMaxY = 13.5f;
 
+        /// <summary>How fast the world drifts down the screen: mines and asteroid turrets move with it.</summary>
+        public const float ScrollSpeed = 3.5f;
+
         /// <summary>Anything this far past an edge is gone for good.</summary>
         public const float CullMargin = 3f;
 

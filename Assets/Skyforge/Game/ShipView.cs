@@ -17,6 +17,12 @@ namespace Skyforge.Game
 
         public Transform Root => _parts.Root.transform;
 
+        /// <summary>Show or hide the whole ship (hidden when destroyed; flickers while invulnerable).</summary>
+        public void SetVisible(bool visible)
+        {
+            if (_parts.Root.activeSelf != visible) _parts.Root.SetActive(visible);
+        }
+
         public ShipView(Transform parent, Loadout loadout)
         {
             _parts = VanguardModel.Build(parent, loadout);
