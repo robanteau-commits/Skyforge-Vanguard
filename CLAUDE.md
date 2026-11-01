@@ -1,0 +1,68 @@
+# Skyforge Vanguard — notes for Claude
+
+Unity 6.6 (6000.6.4f1, URP) low-poly vertical shoot-'em-up, built for Rob. Project folder on his PC:
+`D:\Games\SkyforgeVanguard`. Read `docs/DESIGN.md` (the approved spec) and README.md first.
+
+## Rules sources
+1. `docs/DESIGN.md` — the approved design: weapons, cores, enemies, stages, scoring, controls,
+   milestones (§12). **Authoritative** for numbers. Items marked **[TUNE]** are starting values;
+   **[DECIDE]** marks questions still open for Rob.
+2. Design changes Rob asks for override the doc. Update the doc in the same commit.
+This is an original game in the genre of Ninja Kiwi's Super Monkey; don't copy that game's names,
+stages, enemies or art.
+
+## Hard rules
+- `Assets/Skyforge/Simulation` is engine-free (asmdef `noEngineReferences: true`): plain C#, its own
+  `Vec2`, seeded `Rng` (never System.Random / UnityEngine.Random), no wall-clock time, no
+  Dictionary/HashSet iteration. It runs at a fixed 60 Hz (`Field.Dt`); same setup + inputs ⇒ same
+  result. It uses `float` (single-player; exact cross-machine replays aren't a goal yet).
+- The Game layer reads simulation state but never writes it; the only way in is
+  `StageSim.Step(PlayerInput)`. Loadout changes start a new `StageSim`.
+- Any new simulation state that affects gameplay goes into `StageSim.ComputeHash()`.
+- Content ids are internal and stable (they go into saves): rename via `Name`, never `Id`.
+- No transparent materials: effects fade by shrinking, and every material is URP Lit or Unlit
+  (both in Graphics → Always Included Shaders, so `Shader.Find` works in builds). Glow = Unlit
+  with an HDR colour above 1, which the bloom picks up.
+- Play mode runs without a domain reload: reset statics in a
+  `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]` method (see `Mats.ResetCache`).
+- Every new file under `Assets/` needs its `.meta` committed: run
+  `python Tools/claude/make_metas.py` before committing (Rob's editor would otherwise invent its
+  own GUIDs).
+
+## Layout
+- `Simulation/World/StageSim*.cs` — one partial class split by topic (Player movement, Weapons,
+  Practice drones…). `Field` = the 18 × 32 play field (X right, Y up the screen).
+  `Simulation/Content/` — weapon definitions (`Weapons.cs`).
+- `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
+  loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
+  on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
+  `Hud` is IMGUI. Field (X, Y) maps to world (x, 0, z); the ground is at y = −9.
+- `Game/Art/` — everything is built from code: `MeshBuilder` (flat-shaded facets, auto-wound
+  faces), `VanguardModel` (player ship, nose +Z, pods change with the weapon), `EnemyModels`,
+  `Backdrop` (endless scrolling terrain), `InstancedBatch` (GPU-instanced bullets and particles),
+  `Mats` + `Palette` (the dark sci-fi colours).
+- `Tests/EditMode/SimulationTests.cs` — NUnit tests for the simulation.
+
+## Verifying changes
+- **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:
+  make a net8.0 test project that includes `Assets/Skyforge/Simulation/**/*.cs` and
+  `Assets/Skyforge/Tests/EditMode/**/*.cs` with NUnit 3, then `dotnet test`. The Game layer can be
+  compile-checked against the `UnityEngine.Modules` NuGet reference assemblies plus small stubs
+  for the Input System / URP members it uses. Neither replaces playing it in Unity.
+- **On Rob's PC (Editor open):** `bash Tools/claude/test.sh` runs the EditMode tests;
+  `bash Tools/claude/test.sh '"TestA","TestB"'` runs named `SimulationTests`. `unity command
+  --project-path "D:\Games\SkyforgeVanguard" <cmd>` drives the Editor (`recompile`, `eval`,
+  `editor_play`, `capture_game_view`, `build`…). `eval` has a 5 s main-thread limit.
+- `bash Tools/claude/build.sh` builds `Builds/Windows/Skyforge Vanguard.exe` through the open Editor.
+
+## Working with Rob
+- He's new to Unity and Git; give click-by-click / command-by-command steps for anything he does
+  (he uses Command Prompt, where drive changes need `cd /d`).
+- He plays each build and reports what feels wrong; confirm a bug with a test or measurement
+  before changing anything, and say plainly what you found.
+- Design questions with several reasonable answers: offer 2–3 options with a recommendation.
+- Commit to `main`, one commit per finished change. Bump `bundleVersion` in
+  `ProjectSettings/ProjectSettings.asset` for every build he'll play: patch for fixes and tweaks,
+  minor for new features or milestones.
+- Decided so far: all four core specials in v1; failed runs keep 50% of credits; no Mac, so iOS
+  waits (Windows, web, Android first).

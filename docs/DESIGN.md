@@ -1,4 +1,4 @@
-# Skyforge Vanguard — Design Document (v0.1, draft for Rob's approval)
+# Skyforge Vanguard — Design Document (v0.1, approved)
 
 A vertical-scrolling, low-poly 3D shoot-'em-up. You fly the **Vanguard**, a prototype delta-wing
 fighter forged to stop an invading drone armada. Before each stage you fit a weapon to the **left
@@ -18,7 +18,7 @@ stage map. Every name, weapon, enemy, stage and piece of art in this game is ori
 | Topic | Decision |
 |---|---|
 | Engine | Unity 6 (6000.6.4f1, URP), C#. No three.js. Web via Unity's web export. |
-| Platforms | Windows / Steam, web browser, iOS / Android |
+| Platforms | Windows / Steam, web browser, Android; iOS later (needs a Mac) |
 | Camera | Top-down 3D, tilted ~20°, portrait play field |
 | Structure | World map → stages → boss; replay for medals |
 | Loadout | Left wing + right wing + core, chosen in the hangar and fixed for the stage |
@@ -34,7 +34,7 @@ stage map. Every name, weapon, enemy, stage and piece of art in this game is ori
 | Audio | Sound effects generated in code, plus a synth soundtrack |
 | Online | None in v1 (offline only) |
 | Business | Premium: pay once, no ads, no in-app purchases |
-| v1 scope | World 1: 5 stages + boss stage, 8 wing weapons, core specials (see §4), hangar and shop |
+| v1 scope | World 1: 5 stages + boss stage, 8 wing weapons, all 4 core specials, hangar and shop |
 
 ---
 
@@ -52,7 +52,7 @@ World map ──► pick stage ──► Hangar (fit L wing / R wing / core, buy
 2. **Collect:** destroyed enemies drop credit shards, which drift toward you inside your magnet
    range and otherwise fly off the bottom of the screen.
 3. **Results:** score, kill %, damage taken and medals earned. Credits are banked **even if you
-   fail the stage** (at 50%) so a struggling player still progresses. **[TUNE]**
+   fail the stage** (at 50%, decided) so a struggling player still progresses.
 4. **Spend:** buy new weapons, upgrade weapons and the airframe, then try again or go on.
 
 ---
@@ -114,7 +114,7 @@ Airframe upgrade costs (each stat): **250 / 500 / 900 / 1500 / 2400** credits. *
 
 | # | Weapon | Type | What it does | Lv 1 | Lv 5 | Price | Strong vs / weak vs |
 |---|---|---|---|---|---|---|---|
-| 1 | **Pulse Repeater** | Bullets | Fast stream of cyan bolts straight ahead. | 1 stream, 10 shots/s × 2 dmg | 3 streams, 12/s × 3 dmg | Starter (free) | All-rounder |
+| 1 | **Pulse Repeater** | Bullets | Fast stream of cyan bolts straight ahead. | 1 stream, 10 shots/s × 2 dmg | 3 streams, 12/s × 1.3 dmg | Starter (free) | All-rounder |
 | 2 | **Scatter Cannon** | Spread | A fan of pellets. | 3 pellets at 15°, 4/s × 1.8 | 7 pellets at 40°, 5/s × 2.4 | 600 | Swarms / single targets far away |
 | 3 | **Lance Driver** | Laser bolts | Slow-firing bolts that **pierce** every enemy in a line. | 2/s × 11, pierce ∞ | 3/s × 17, width +50% | 900 | Lines of enemies / swarms off to the sides |
 | 4 | **Sunline Beam** | Continuous beam | A beam to the top of the screen. Damage ramps up the longer it stays on one target. | 16 → 28 DPS over 1.5 s | 30 → 60 DPS, wider beam | 1400 | Bosses, gunships / swarms |
@@ -138,9 +138,7 @@ gunship-class enemies) **[TUNE]**, multiplied by the Capacitor stat. When it's f
 | **Aegis Field** (shield / time-slow) | A bubble for 5 s that absorbs all hits; enemy bullets within 6 u move at 40% speed. | 8 s; bullets it absorbs are fired back at enemies | 1200 |
 | **Wingmates** (drones) | 2 drones fly alongside you for 10 s, each firing a copy of your wing weapons at 40% damage. | 3 drones, 15 s, 60% damage | 1300 |
 
-**[DECIDE] v1 cores:** you picked all four types. The scope option said "2 cores in v1". I recommend
-shipping **all four** (each is small) unless the build schedule slips, in which case Aegis Field and
-Wingmates move to v1.1.
+**v1 cores:** all four ship in v1 (decided).
 
 Core upgrade costs: **Lv2 400 · Lv3 800 · Lv4 1300 · Lv5 2000**. **[TUNE]**
 
@@ -302,8 +300,8 @@ port stays possible.
   grid.
 - **Saves:** a JSON file in `persistentDataPath` (works on PC, mobile and web, which uses
   IndexedDB). It's versioned so later updates won't break saves.
-- **Builds:** Windows (with an installer script like Banners), web, Android and iOS. iOS builds
-  need a Mac with Xcode. **[DECIDE]** Do you have a Mac, or should iOS wait?
+- **Builds:** Windows (with an installer script like Banners), web and Android. iOS waits until
+  a Mac with Xcode is available (decided).
 
 ---
 
@@ -330,9 +328,9 @@ port stays possible.
 ---
 
 ## 13. Open questions for Rob ([DECIDE])
-1. **Core specials in v1:** all four (recommended) or two?
-2. **Medal rewards:** credits only, or cosmetic unlocks too?
-3. **Failed runs:** keep 50% of credits (recommended), 100%, or 0%?
-4. **iOS:** do you have a Mac for iOS builds, or should iOS wait?
-5. **Music:** generated in code for now; real tracks before release?
-6. Anything in the weapon or enemy list you'd add, cut or rename?
+Answered (2026-11-01): **all four cores** in v1; failed runs **keep 50%** of credits; **no Mac**,
+so iOS waits (Windows, web and Android first). Approved as written.
+
+Still open:
+1. **Medal rewards:** credits only, or cosmetic unlocks too?
+2. **Music:** generated in code for now; real tracks before release?
