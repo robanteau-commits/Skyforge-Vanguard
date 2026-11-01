@@ -82,7 +82,7 @@ World map ──► pick stage ──► Hangar (fit L wing / R wing / core, buy
 |---|---|---|---|
 | Hull | 100 | +20 | 200 |
 | Shield | 40 | +12 | 100 |
-| Shield regen | 10 /s after 2.5 s without a hit | −0.3 s delay, +2 /s | 1.0 s, 20 /s |
+| Shield regen | 4 /s after 4 s without a hit (Rob: the original 10 /s after 2.5 s felt too fast) | −0.4 s delay, +1.2 /s | 2.0 s, 10 /s |
 | Thrusters (max speed) | 14 u/s | +1.5 | 21.5 u/s |
 | Magnet range | 2.5 u | +1.0 | 7.5 u |
 | Capacitor (core charge rate) | 100% | +10% | 150% |

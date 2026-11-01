@@ -14,8 +14,8 @@ namespace Skyforge.Simulation
         public float Hull = 100f, MaxHull = 100f;
         public float Shield = 40f, MaxShield = 40f;
         /// <summary>Shield regeneration per second, after <see cref="ShieldRegenDelay"/> without a hit.</summary>
-        public float ShieldRegenRate = 10f;
-        public float ShieldRegenDelay = 2.5f;
+        public float ShieldRegenRate = 4f;
+        public float ShieldRegenDelay = 4f;
         /// <summary>Seconds left before the shield starts regenerating.</summary>
         public float ShieldRegenWait;
         /// <summary>Seconds of invulnerability left after a hit.</summary>

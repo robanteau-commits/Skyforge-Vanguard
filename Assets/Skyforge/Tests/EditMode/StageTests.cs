@@ -89,7 +89,8 @@ namespace Skyforge.Simulation.Tests
             Assert.AreEqual(30f, sim.Player.Shield, 0.01f);
             Run(sim, 0.6f);
             Assert.Greater(sim.Player.Shield, 30f);
-            Run(sim, 2f);
+            // 10 points to restore at the regeneration rate.
+            Run(sim, 10f / sim.Player.ShieldRegenRate + 0.2f);
             Assert.AreEqual(sim.Player.MaxShield, sim.Player.Shield, 0.01f);
         }
 
