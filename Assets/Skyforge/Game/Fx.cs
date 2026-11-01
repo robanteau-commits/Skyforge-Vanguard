@@ -25,7 +25,9 @@ namespace Skyforge.Game
         {
             public readonly InstancedBatch Batch;
             public readonly List<Particle> Items = new List<Particle>(256);
-            public Layer(Mesh mesh, Material mat) { Batch = new InstancedBatch(mesh, mat); }
+            /// <summary>Big bright flashes: kept small when the Flashes setting is off.</summary>
+            public bool Flash;
+            public Layer(Mesh mesh, Material mat, bool flash = false) { Batch = new InstancedBatch(mesh, mat); Flash = flash; }
         }
 
         readonly Layer _flash, _ember, _debris, _muzzle, _enemyFlash, _gold, _green;
@@ -35,11 +37,11 @@ namespace Skyforge.Game
         {
             var ball = Octa(1f);
             var shard = TetraMesh();
-            _flash = new Layer(ball, Mats.Explosion);
+            _flash = new Layer(ball, Mats.Explosion, flash: true);
             _ember = new Layer(ball, Mats.Spark);
             _debris = new Layer(shard, Mats.Debris);
             _muzzle = new Layer(ball, Mats.PlayerGlow);
-            _enemyFlash = new Layer(ball, Mats.Telegraph);
+            _enemyFlash = new Layer(ball, Mats.Telegraph, flash: true);
             _gold = new Layer(ball, Mats.Credit);
             _green = new Layer(ball, Mats.Repair);
         }
@@ -211,6 +213,8 @@ namespace Skyforge.Game
         static void Spawn(Layer layer, Vector3 pos, Vector3 vel, float life, float size, byte curve, float drag = 0f)
         {
             if (layer.Items.Count > 1500) return;
+            // Accessibility: no big bright flashes (small ones stay, so hits still read).
+            if (layer.Flash && !GameSettings.Flashes && size > 0.4f) size = 0.4f + (size - 0.4f) * 0.2f;
             layer.Items.Add(new Particle
             {
                 Pos = pos, Vel = vel, Life = life, Size = size, Curve = curve, Drag = drag,

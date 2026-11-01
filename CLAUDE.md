@@ -49,7 +49,7 @@ stages, enemies or art.
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
   loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
   on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
-  `GameRunner` has three screens (Map, Hangar, Flying), owns the `Progress` (loaded and saved by
+  `GameRunner` has four screens (Title, Map, Hangar, Flying), owns the `Progress` (loaded and saved by
   `SaveStore`, PlayerPrefs) and banks each finished stage (`RecordIfFinished`; not in sandbox,
   practice or the sampler). `Hud` is IMGUI (partial: `Hud.Map.cs` is the world map, where the
   game starts, over `Art/GlobeModel`; `Hud.Hangar.cs` is the shop and loadout screen with a live
@@ -65,7 +65,16 @@ stages, enemies or art.
   `VanguardModel` (player ship, nose +Z, pods change with the weapon), `EnemyModels`. Also
   `Backdrop` (starfield), `InstancedBatch` (GPU-instanced bullets and particles),
   `Mats` + `Palette` (the dark sci-fi colours). Blender sources live in `Art/Blender/`.
+- `Game/Audio/` — `Synth` (sfxr-style tone layers → samples), `Sounds` (the 33 effect designs,
+  gains and minimum gaps), `Music` (16-bar synthwave loops per track) — all three plain C#, so they
+  can be rendered to WAV under .NET for a listen — and `AudioDirector` (turns SimEvents into
+  sounds, beam hum, cross-faded music). `GameSettings` holds the player settings (PlayerPrefs
+  `skyforge.settings.v1`). `Hud.Menus.cs`: title, pause menu, settings and credits panels, touch
+  buttons (their screen rects go to `PlayerControls.CoreButton` / `PauseButton`).
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
+  `Editor/SkyforgeBuild.cs` — the **Skyforge → Build** menu (Windows, WebGL, Android APK / AAB) and
+  a pre-build hook that applies each platform's settings. `Installer/` — the Inno Setup script.
+  docs/BUILDING.md has Rob's click-by-click build steps.
 - `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
   `StageTests` (enemies, damage, combo, pickups, stage flow), `WeaponTests` (every wing weapon
   and core), `LevelTests` (what each weapon level adds), `FieldTests` (the wide PC field),
@@ -84,7 +93,9 @@ stages, enemies or art.
   `bash Tools/claude/test.sh '"TestA","TestB"'` runs named `SimulationTests`. `unity command
   --project-path "D:\Games\SkyforgeVanguard" <cmd>` drives the Editor (`recompile`, `eval`,
   `editor_play`, `capture_game_view`, `build`…). `eval` has a 5 s main-thread limit.
-- `bash Tools/claude/build.sh` builds `Builds/Windows/Skyforge Vanguard.exe` through the open Editor.
+- `bash Tools/claude/build.sh [windows|web|android]` builds through the open Editor (Windows also
+  makes the installer). The editor build script's Unity-6-only calls (`NamedBuildTarget`) can't be
+  compile-checked against the 2021.1 `Unity3D.SDK` NuGet; everything else in it can.
 
 ## Working with Rob
 - He's new to Unity and Git; give click-by-click / command-by-command steps for anything he does

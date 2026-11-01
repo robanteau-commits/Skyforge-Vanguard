@@ -24,10 +24,22 @@ namespace Skyforge.Game
         const float MouseWakePixels = 3f;
 
         bool _mouseActive;
-        bool _secondFingerDown;
 
         /// <summary>True when the last input came from a touchscreen (the HUD shows touch hints).</summary>
         public bool UsingTouch { get; private set; }
+
+        /// <summary>On-screen touch buttons, in screen pixels (origin bottom-left), set by the HUD while flying.</summary>
+        public static Rect CoreButton, PauseButton;
+        bool _pauseTap;
+
+        /// <summary>The on-screen pause button was tapped since the last call (reading clears it).</summary>
+        public bool ConsumePauseTap()
+        {
+            bool t = _pauseTap;
+            _pauseTap = false;
+            return t;
+        }
+        int _dragFinger = -1;
 
         /// <summary>Read this frame's input. <paramref name="drag"/> is the touch movement this frame.</summary>
         public PlayerInput Read(PlayfieldCamera cam)
@@ -59,29 +71,40 @@ namespace Skyforge.Game
             }
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
-            // ------------------------------------------------------------ touch: relative drag
+            // ------------------------------------------------------------ touch: relative drag + buttons
             if (touch != null)
             {
-                var primary = touch.primaryTouch;
-                if (primary.press.isPressed)
+                var touches = touch.touches;
+                bool any = false, dragStillDown = false;
+                for (int i = 0; i < touches.Count; i++)
+                {
+                    var t = touches[i];
+                    if (!t.press.isPressed) continue;
+                    any = true;
+                    int id = t.touchId.ReadValue();
+                    if (t.press.wasPressedThisFrame)
+                    {
+                        var at = t.position.ReadValue();
+                        // Buttons first; then the first free finger drags, and any other finger fires the core.
+                        if (CoreButton.Contains(at)) { input.Core = true; continue; }
+                        if (PauseButton.Contains(at)) { _pauseTap = true; continue; }
+                        if (_dragFinger < 0) _dragFinger = id;
+                        else if (id != _dragFinger) input.Core = true;
+                    }
+                    if (id == _dragFinger)
+                    {
+                        dragStillDown = true;
+                        input.Mode = MoveMode.Drag;
+                        input.Drag = cam.ScreenDeltaToField(t.position.ReadValue(), t.delta.ReadValue()) * GameSettings.TouchSensitivity;
+                    }
+                }
+                if (!dragStillDown) _dragFinger = -1;
+                if (any)
                 {
                     UsingTouch = true;
                     _mouseActive = false;
-                    var delta = primary.delta.ReadValue();
-                    input.Mode = MoveMode.Drag;
-                    input.Drag = cam.ScreenDeltaToField(primary.position.ReadValue(), delta);
-
-                    // A second finger touching down fires the core.
-                    bool second = false;
-                    var touches = touch.touches;
-                    for (int i = 0; i < touches.Count; i++)
-                        if (touches[i].press.isPressed && touches[i].touchId.ReadValue() != primary.touchId.ReadValue())
-                            second = true;
-                    if (second && !_secondFingerDown) input.Core = true;
-                    _secondFingerDown = second;
                     return input;
                 }
-                _secondFingerDown = false;
             }
 
             if (dir != Vector2.zero)
@@ -121,6 +144,13 @@ namespace Skyforge.Game
                    (pad != null && pad.startButton.wasPressedThisFrame);
         }
 
+        /// <summary>Back out of a menu screen: Esc or gamepad B.</summary>
+        public static bool BackPressed()
+        {
+            var kb = Keyboard.current; var pad = Gamepad.current;
+            return (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
+        }
+
         /// <summary>M: back to the world map.</summary>
         public static bool MapPressed() => Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame;
 
@@ -132,7 +162,7 @@ namespace Skyforge.Game
         {
             var kb = Keyboard.current; var pad = Gamepad.current;
             return (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) ||
-                   (pad != null && pad.startButton.wasPressedThisFrame);
+                   (pad != null && (pad.startButton.wasPressedThisFrame || pad.buttonSouth.wasPressedThisFrame));
         }
 
         /// <summary>Test-flight shortcut: number key 1–5 pressed this frame, else 0.</summary>

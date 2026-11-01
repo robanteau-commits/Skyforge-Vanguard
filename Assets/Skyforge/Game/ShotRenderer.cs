@@ -48,7 +48,7 @@ namespace Skyforge.Game
         readonly Look _pulse, _pellet, _lance, _missile, _micro, _disc;
         readonly InstancedBatch _plume;
         readonly Trail _smoke, _hornetDots, _pulseDots;
-        readonly InstancedBatch _orb, _orbRim, _dart, _dartRim, _credit, _repair;
+        readonly InstancedBatch _orb, _orbRim, _dart, _dartRim, _credit, _repair, _orbHalo, _dartHalo;
         readonly List<Mesh> _meshes = new List<Mesh>();
 
         public ShotRenderer()
@@ -125,6 +125,9 @@ namespace Skyforge.Game
             _orbRim = new InstancedBatch(Diamond(new Vector3(0.3f, 0.1f, 0.3f)), Mats.BulletRim);
             _dart = new InstancedBatch(Diamond(new Vector3(0.1f, 0.08f, 0.32f)), Mats.EnemyBullet);
             _dartRim = new InstancedBatch(Diamond(new Vector3(0.16f, 0.06f, 0.42f)), Mats.BulletRim);
+            // High-contrast mode: a white halo outside the dark rim.
+            _orbHalo = new InstancedBatch(Diamond(new Vector3(0.38f, 0.06f, 0.38f)), Mats.Spark);
+            _dartHalo = new InstancedBatch(Diamond(new Vector3(0.22f, 0.04f, 0.52f)), Mats.Spark);
             _credit = new InstancedBatch(Diamond(new Vector3(0.14f, 0.2f, 0.14f)), Mats.Credit);
             _repair = new InstancedBatch(Diamond(new Vector3(0.3f, 0.3f, 0.3f)), Mats.Repair);
         }
@@ -209,9 +212,10 @@ namespace Skyforge.Game
             UpdateTrail(_hornetDots, dt);
             UpdateTrail(_pulseDots, dt);
 
-            _orb.Clear(); _orbRim.Clear(); _dart.Clear(); _dartRim.Clear();
+            _orb.Clear(); _orbRim.Clear(); _dart.Clear(); _dartRim.Clear(); _orbHalo.Clear(); _dartHalo.Clear();
             var rot = Quaternion.identity;
-            var one = Vector3.one;
+            bool contrast = GameSettings.HighContrastBullets;
+            var one = contrast ? Vector3.one * 1.25f : Vector3.one;
             foreach (var s in sim.EnemyShots)
             {
                 var p = s.Pos - s.Vel * behind;
@@ -222,14 +226,16 @@ namespace Skyforge.Game
                     var r = s.Vel.LengthSq > 0.01f ? Quaternion.LookRotation(new Vector3(s.Vel.X, 0f, s.Vel.Y)) : rot;
                     _dart.Add(pos, r, one);
                     _dartRim.Add(rim, r, one);
+                    if (contrast) _dartHalo.Add(rim - Vector3.up * 0.04f, r, one);
                 }
                 else
                 {
                     _orb.Add(pos, rot, one);
                     _orbRim.Add(rim, rot, one);
+                    if (contrast) _orbHalo.Add(rim - Vector3.up * 0.04f, rot, one);
                 }
             }
-            _orbRim.Draw(); _dartRim.Draw(); _orb.Draw(); _dart.Draw();
+            _orbHalo.Draw(); _dartHalo.Draw(); _orbRim.Draw(); _dartRim.Draw(); _orb.Draw(); _dart.Draw();
 
             _credit.Clear(); _repair.Clear();
             foreach (var k in sim.Pickups)

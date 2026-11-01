@@ -49,7 +49,13 @@ namespace Skyforge.Game
                 DrawRect(panel, Palette.PanelBg);
                 float pad = 8f * s;
                 MapRight(new Rect(panel.x + pad, panel.y + pad, panel.width - pad * 2f, panel.height - pad * 2f), s);
-                GUI.Label(new Rect(field.x + pad, field.y + pad, field.width, 30f * s), "WORLD 1 · EARTHFALL   " + _runner.Progress.Credits.ToString("N0") + " cr", _title);
+                GUI.Label(new Rect(field.x + pad, field.y + pad, field.width, 30f * s), "WORLD 1   " + _runner.Progress.Credits.ToString("N0") + " cr", _title);
+                var btn = new GUIStyle(_button) { alignment = TextAnchor.MiddleCenter };
+                float bw = 96f * s;
+                if (GUI.Button(new Rect(field.xMax - pad - bw, field.y + pad, bw, 32f * s), "SETTINGS", btn)) OpenPanel(Panel.Settings);
+                bool vetOpen = _runner.Progress.VeteranUnlocked || _runner.Sandbox;
+                if (vetOpen && GUI.Button(new Rect(field.xMax - pad - bw * 2f - 6f * s, field.y + pad, bw, 32f * s), _runner.Veteran ? "VETERAN" : "NORMAL", _runner.Veteran ? _buttonDanger : btn))
+                    _runner.SetVeteran(!_runner.Veteran);
             }
             MapNodes(nodesArea, s);
         }
@@ -127,6 +133,11 @@ namespace Skyforge.Game
             y += 42f * s;
             Line(ref y, r, "Test flights: they don't earn anything.", _small, 22f * s);
 
+            float half2 = (r.width - 6f * s) * 0.5f;
+            var smallBtn = new GUIStyle(_button) { alignment = TextAnchor.MiddleCenter };
+            if (GUI.Button(new Rect(r.x, r.yMax - 112f * s, half2, 36f * s), "< TITLE", smallBtn)) _runner.OpenTitle();
+            if (GUI.Button(new Rect(r.x + half2 + 6f * s, r.yMax - 112f * s, half2, 36f * s), "SETTINGS", smallBtn)) OpenPanel(Panel.Settings);
+
             // Reset: asks twice.
             bool armed = Time.unscaledTime < _resetArmedUntil;
             var resetRect = new Rect(r.x, r.yMax - 70f * s, r.width, 34f * s);
@@ -135,7 +146,7 @@ namespace Skyforge.Game
                 if (armed) { _resetArmedUntil = -1f; _runner.ResetProgress(); }
                 else _resetArmedUntil = Time.unscaledTime + 3f;
             }
-            GUI.Label(new Rect(r.x, r.yMax - 26f * s, r.width, 24f * s), "v" + Application.version + " · " + Mathf.RoundToInt(_fps) + " fps", _small);
+            GUI.Label(new Rect(r.x, r.yMax - 26f * s, r.width, 24f * s), "v" + Application.version + (GameSettings.ShowFps ? " · " + Mathf.RoundToInt(_fps) + " fps" : ""), _small);
         }
 
         void MapRight(Rect r, float s)

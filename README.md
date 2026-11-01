@@ -6,13 +6,31 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M4, all of World 1: five stages, the Tidebreaker boss and Veteran mode (v0.6.0)
+- **Status:** milestone M5, sound, settings and builds for Windows, web and Android (v0.7.0)
+- **Building:** [docs/BUILDING.md](docs/BUILDING.md)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
 2. Unity Hub → **Projects** → **Add** → **Add project from disk** → choose
    `D:\Games\SkyforgeVanguard`. The first open takes a few minutes while Unity builds its cache.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
+
+## What's in M5 — sound, settings and builds
+- **Sound:** every effect and the music are synthesised in code as the game starts: a sound for
+  each wing weapon and core, hits, explosions (bigger for big ships, a long one for the boss),
+  shield and hull hits, credits (chiming higher with a bigger combo), repairs, boss warnings and
+  lasers, menu clicks, purchases, medals, and clear / fail jingles. Synthwave music: a calm track
+  for the menus, one per stage and a boss track.
+- **Title screen** (Play, Settings, Credits, Quit) and a **pause menu** (Resume, Settings, Restart,
+  Hangar, World map).
+- **Settings:** music and effects volume, screen shake (off / low / full), screen flashes on/off,
+  high-contrast enemy bullets, graphics quality, touch sensitivity, show FPS, and fullscreen /
+  resolution on PC. Saved separately from progress.
+- **Touch:** a pause button and a core button (showing its charge) during play; any extra finger
+  also fires the core. The stage pauses when the app or browser tab loses focus.
+- **Gamepad:** A / Start move forward through the menus, B goes back.
+- **Builds:** Skyforge → Build menu in Unity for Windows, web and Android, plus the Windows
+  installer. Step by step in [docs/BUILDING.md](docs/BUILDING.md).
 
 ## What's in M4 — all of World 1
 - **Stages 1-2 to 1-5:** Harbor Line (Bastion turrets on drifting asteroids), Stormwall (Spine
@@ -78,7 +96,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 | M2 | All 8 wing weapons, the 4 core specials, hangar loadout screen | **done** |
 | M3 | Credits, shop, upgrades, results, medals, saves, world map | **done** |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | **done** |
-| M5 | Audio, polish, settings, touch, mobile and web builds | |
+| M5 | Audio, polish, settings, touch, mobile and web builds | **done** (needs trying on a phone and in a browser) |
 
 ## Architecture
 - `Assets/Skyforge/Simulation` — the game rules as plain, engine-free C# at a fixed 60 Hz

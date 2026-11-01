@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using Skyforge.Simulation;
+using Skyforge.Game.Audio;
 // The Input System has its own PlayerInput component; ours is the simulation's input struct.
 using PlayerInput = Skyforge.Simulation.PlayerInput;
 
@@ -23,9 +24,12 @@ namespace Skyforge.Game
         public PlayerControls Controls { get; } = new PlayerControls();
         public bool Paused { get; private set; }
 
-        public enum Screen { Map, Hangar, Flying }
-        /// <summary>Which screen is up: the world map, the hangar (live practice preview behind it) or a stage.</summary>
-        public Screen Current { get; private set; } = Screen.Map;
+        public enum Screen { Title, Map, Hangar, Flying }
+        /// <summary>Which screen is up: the title, the world map, the hangar (live practice preview behind it) or a stage.</summary>
+        public Screen Current { get; private set; } = Screen.Title;
+        public bool InTitle => Current == Screen.Title;
+        public bool Flying => Current == Screen.Flying;
+        public AudioDirector Audio { get; private set; }
         public bool InHangar => Current == Screen.Hangar;
         public bool InMap => Current == Screen.Map;
 
@@ -124,9 +128,11 @@ namespace Skyforge.Game
             _fx = new Fx();
             _globe = GlobeModel.Create(_world);
             Progress = SaveStore.Load();
+            GameSettings.Load();
+            Audio = gameObject.AddComponent<AudioDirector>();
             gameObject.AddComponent<Hud>().Init(this);
 
-            OpenMap();
+            OpenTitle();
         }
 
         /// <summary>
@@ -164,6 +170,13 @@ namespace Skyforge.Game
         // ------------------------------------------------------------------ stage
 
         int[] AirframeLevels => Sandbox ? null : Progress.AirframeLevels;
+
+        /// <summary>The title screen: the Vanguard flying over the starfield.</summary>
+        public void OpenTitle()
+        {
+            Current = Screen.Title;
+            Begin(new StageSetup { Seed = 7, Loadout = Loadout, Stage = null, PracticeDrones = false, FieldWidth = FieldWidth, Airframe = AirframeLevels });
+        }
 
         /// <summary>Show the world map (a slowly turning Earth behind it; no ship).</summary>
         public void OpenMap()
@@ -218,6 +231,7 @@ namespace Skyforge.Game
             if (Sandbox || !Progress.Buy(weapon)) return false;
             Progress.Fit(weapon.Slot, side, weapon);
             SaveStore.Save(Progress);
+            Audio.Play(Sfx.Buy);
             if (InHangar) OpenHangar();
             return true;
         }
@@ -226,6 +240,7 @@ namespace Skyforge.Game
         {
             if (Sandbox || !Progress.Upgrade(weapon)) return false;
             SaveStore.Save(Progress);
+            Audio.Play(Sfx.Buy);
             if (InHangar) OpenHangar();
             return true;
         }
@@ -234,6 +249,7 @@ namespace Skyforge.Game
         {
             if (Sandbox || !Progress.UpgradeAirframe(stat)) return false;
             SaveStore.Save(Progress);
+            Audio.Play(Sfx.Buy);
             if (InHangar) OpenHangar();
             return true;
         }
@@ -264,6 +280,7 @@ namespace Skyforge.Game
             if (Sandbox || Sim.Stage == null || Sim.Stage == Stages.ArmadaSampler) { LastResult = null; return; }
             LastResult = Progress.RecordStage(Sim.Stage, Sim);
             SaveStore.Save(Progress);
+            if (LastResult.NewAce || LastResult.NewUntouched || LastResult.NewPurge) Audio.Play(Sfx.Medal);
         }
 
         void Begin(StageSetup setup)
@@ -283,6 +300,19 @@ namespace Skyforge.Game
             if (_ship == null) _ship = new ShipView(_world, Loadout);
             else _ship.RefitPods(Loadout);
             Paused = false;
+            Audio?.Reset();
+        }
+
+        /// <summary>Resume a paused stage.</summary>
+        public void Resume() => Paused = false;
+
+        /// <summary>Pause a stage (the pause menu shows).</summary>
+        public void Pause() { if (Flying && Sim.Status == StageStatus.Playing) Paused = true; }
+
+        /// <summary>Screen shake, scaled by the setting (0 = off).</summary>
+        void Shake(float amount)
+        {
+            if (GameSettings.Shake > 0f) Shake(amount * GameSettings.Shake);
         }
 
         /// <summary>The hangar preview flies itself: it hovers mid-screen, weaving a little, and fires its core whenever it's ready.</summary>
@@ -303,19 +333,31 @@ namespace Skyforge.Game
                 SelectedStage = stageKey == 6 ? Stages.FirstLight : stageKey == 7 ? Stages.ArmadaSampler : null;
                 Launch();
             }
+            else if (MenuOpen)
+            {
+                // The settings or credits panel has the keys.
+            }
+            else if (InTitle)
+            {
+                if (PlayerControls.LaunchPressed()) OpenMap();
+            }
             else if (InMap)
             {
                 if (PlayerControls.LaunchPressed()) OpenHangar();
+                else if (PlayerControls.BackPressed()) OpenTitle();
             }
             else if (InHangar)
             {
                 if (PlayerControls.LaunchPressed()) Launch();
-                else if (PlayerControls.PausePressed()) OpenMap();
+                else if (PlayerControls.BackPressed()) OpenMap();
             }
             else
             {
-                if (PlayerControls.PausePressed()) Paused = !Paused;
-                else if (Paused && ResumeClicked()) Paused = false;
+                if (PlayerControls.PausePressed() || Controls.ConsumePauseTap())
+                {
+                    if (Paused) Paused = false;
+                    else Pause();
+                }
                 if (PlayerControls.RestartPressed()) Launch();
                 if (PlayerControls.HangarPressed()) OpenHangar();
                 if (PlayerControls.MapPressed()) OpenMap();
@@ -325,9 +367,14 @@ namespace Skyforge.Game
             }
 
             float dt = Mathf.Min(Time.deltaTime, MaxFrameTime);
+            // The settings panel pauses a stage too.
+            if (MenuOpen && Flying) Pause();
+            Audio.SfxScale = InHangar ? 0.3f : InTitle || InMap ? 0f : 1f;
+            Audio.MusicDuck = Paused ? 0.45f : Flying && Sim.Status != StageStatus.Playing ? 0.6f : 1f;
+            Audio.PlayMusic(Flying && Sim.Stage != null ? Music.ForStage(Sim.Stage.Id) : Music.Hangar);
             if (!Paused)
             {
-                var input = InHangar ? PreviewInput() : InMap ? PlayerInput.Idle : Controls.Read(View);
+                var input = InHangar || InTitle ? PreviewInput() : InMap ? PlayerInput.Idle : Controls.Read(View);
                 // Touch movement and core presses are per frame; hold them until a step uses them.
                 _pendingDrag += input.Drag;
                 _pendingCore |= input.Core;
@@ -347,14 +394,15 @@ namespace Skyforge.Game
                     _fx.Consume(Sim.Events);
                     _weapons.Consume(Sim.Events);
                     _asteroids.Consume(Sim.Events, Sim.Time);
+                    Audio.AfterStep(Sim);
                     foreach (var ev in Sim.Events)
                     {
-                        if (ev.Type == SimEventType.HullHit) View.Shake(0.35f);
-                        else if (ev.Type == SimEventType.PlayerDestroyed) View.Shake(0.8f);
-                        else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Tidebreaker) View.Shake(1.2f);
-                        else if (ev.Type == SimEventType.Destroyed && EnemyDefs.IsBig(ev.EnemyKind)) View.Shake(0.5f);
-                        else if (ev.Type == SimEventType.BossPhase && ev.Value > 1f) View.Shake(0.6f);
-                        else if (ev.Type == SimEventType.CoreActivated && ev.EnemyId == (int)WeaponKind.PulseNova && !InHangar) View.Shake(0.45f);
+                        if (ev.Type == SimEventType.HullHit) Shake(0.35f);
+                        else if (ev.Type == SimEventType.PlayerDestroyed) Shake(0.8f);
+                        else if (ev.Type == SimEventType.Destroyed && ev.EnemyKind == EnemyKind.Tidebreaker) Shake(1.2f);
+                        else if (ev.Type == SimEventType.Destroyed && EnemyDefs.IsBig(ev.EnemyKind)) Shake(0.5f);
+                        else if (ev.Type == SimEventType.BossPhase && ev.Value > 1f) Shake(0.6f);
+                        else if (ev.Type == SimEventType.CoreActivated && ev.EnemyId == (int)WeaponKind.PulseNova && !InHangar) Shake(0.45f);
                     }
                     _accumulator -= Field.Dt;
                     RecordIfFinished();
@@ -379,20 +427,33 @@ namespace Skyforge.Game
             _bossViews.Render(Sim, renderTime);
             _shots.Draw(Sim, (1f - alpha) * Field.Dt, renderTime, Paused ? 0f : dt);
             _fx.Tick(Paused ? 0f : dt);
+            Audio.Beam(Sim.Player.BeamOn[0] || Sim.Player.BeamOn[1], Paused);
         }
 
-        static bool ResumeClicked()
+        /// <summary>The settings or credits panel is open (the HUD sets this).</summary>
+        public bool MenuOpen { get; set; }
+
+        /// <summary>Leave the game (PC only; phones and browsers don't quit apps).</summary>
+        public static bool CanQuit => !Application.isMobilePlatform && Application.platform != RuntimePlatform.WebGLPlayer;
+
+        public void Quit()
         {
-            var touch = Touchscreen.current;
-            var mouse = Mouse.current;
-            return (touch != null && touch.primaryTouch.press.wasPressedThisFrame) ||
-                   (mouse != null && mouse.leftButton.wasPressedThisFrame);
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         void OnApplicationFocus(bool focused)
         {
             // Phones and browser tabs: losing focus pauses the stage (the hangar keeps running).
-            if (!focused && Sim != null && Current == Screen.Flying) Paused = true;
+            if (!focused && Sim != null) Pause();
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused && Sim != null) Pause();
         }
 
         void OnDestroy()

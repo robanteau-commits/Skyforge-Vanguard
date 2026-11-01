@@ -108,18 +108,25 @@ namespace Skyforge.Game
 
             float sideW = field.x;
             bool panels = sideW >= 170f * scale;
-            if (_runner.InMap)
-            {
-                Map(field, scale, panels);
-                return;
-            }
-            if (_runner.InHangar)
-            {
-                Hangar(field, scale, panels);
-                return;
-            }
+            bool flyingLive = _runner.Flying && !_runner.Paused && sim.Status == StageStatus.Playing;
+            if (Event.current.type == EventType.MouseDown && !flyingLive) _runner.Audio.Play(Audio.Sfx.Click);
+
+            // Under an open settings/credits panel nothing else takes clicks.
+            GUI.enabled = !PanelOpen;
+            if (_runner.InTitle) Title(field, scale);
+            else if (_runner.InMap) Map(field, scale, panels);
+            else if (_runner.InHangar) Hangar(field, scale, panels);
+            else Flight(field, sim, scale, panels);
+            GUI.enabled = true;
+            if (!_runner.Flying) TouchButtons(field, sim, scale, false);
+            Panels(scale);
+        }
+
+        void Flight(Rect field, StageSim sim, float scale, bool panels)
+        {
             if (panels)
             {
+                float sideW = field.x;
                 DrawRect(new Rect(0f, 0f, sideW, Screen.height), Palette.PanelBg);
                 DrawRect(new Rect(field.xMax, 0f, Screen.width - field.xMax, Screen.height), Palette.PanelBg);
                 float pad = 24f * scale;
@@ -132,17 +139,13 @@ namespace Skyforge.Game
             }
 
             BossBar(field, sim, scale, panels);
+            bool playing = sim.Status == StageStatus.Playing;
+            TouchButtons(field, sim, scale, playing && !_runner.Paused && (TouchUi && (_runner.Controls.UsingTouch || Application.isMobilePlatform)));
 
-            if (sim.Status != StageStatus.Playing && sim.TimeSinceEnd >= ResultsDelay && _runner.ResultsReady)
+            if (!playing && sim.TimeSinceEnd >= ResultsDelay && _runner.ResultsReady)
                 Results(field, sim, scale);
-            else if (_runner.Paused)
-            {
-                DrawRect(field, new Color(0f, 0f, 0f, 0.55f));
-                var mid = new Rect(field.x, field.center.y - 40f * scale, field.width, 50f * scale);
-                GUI.Label(mid, "PAUSED", _centre);
-                GUI.Label(new Rect(field.x, mid.yMax, field.width, 30f * scale),
-                    _runner.Controls.UsingTouch ? "tap to resume" : "Esc or click to resume", _hint);
-            }
+            else if (_runner.Paused && !PanelOpen)
+                PauseMenu(field, scale);
         }
 
         // ------------------------------------------------------------------ panels
@@ -181,7 +184,7 @@ namespace Skyforge.Game
             Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)), _small, 22f * s);
 
             var foot = new Rect(r.x, r.yMax - 44f * s, r.width, 44f * s);
-            GUI.Label(foot, "v" + Application.version + " · M4\n" + Mathf.RoundToInt(_fps) + " fps", _small);
+            GUI.Label(foot, "v" + Application.version + (GameSettings.ShowFps ? "\n" + Mathf.RoundToInt(_fps) + " fps" : ""), _small);
         }
 
         void RightPanel(Rect r, float s)
@@ -197,8 +200,8 @@ namespace Skyforge.Game
                 "Space, left click, gamepad A or a second finger — fire the core when it's charged\n\n" +
                 "Wings fire automatically. Dodge the orange bullets; a red glow means an enemy is about to fire. " +
                 "Your shield takes hits first and recharges; hull damage resets the combo. Fly near gold shards to collect them.\n\n" +
-                "H — back to the hangar\n" +
-                "R — restart · Esc / P — pause\n" +
+                "Esc / P / Start — pause menu\n" +
+                "H — hangar · M — map · R — restart\n" +
                 "6 / 7 / 8 — fly 1-1 / Armada Sampler / practice", _small, 440f * s);
         }
 

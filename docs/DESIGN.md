@@ -297,6 +297,10 @@ port stays possible.
 5. **Results:** score, kills %, credits, medals earned, then Retry / Hangar / Next.
 6. **Settings:** volume (music and sound effects), screen shake, screen flashes (on/off, for
    accessibility), bullet-contrast mode, touch sensitivity, resolution / fullscreen on PC.
+   **As built (v0.7.0):** also graphics quality (High = the "PC" quality level, Low = "Mobile")
+   and show-FPS; reachable from the title, the map and the pause menu. Shake has Off / Low / Full.
+   The pause menu has Resume, Settings, Restart, Hangar and World map. Touch play shows a pause
+   button (top centre) and a core button with its charge (bottom right).
 
 ---
 
@@ -335,6 +339,14 @@ port stays possible.
 - **Music:** a synth soundtrack of one track per stage plus a boss track. I'll make generated
   synthwave loops in code for v1; that's quick and fits the style, but it won't match a composed
   score. **[DECIDE]** later whether to swap in royalty-free or commissioned tracks for release.
+- **As built (v0.7.0):** `Game/Audio/Synth.cs` renders layered tones (square, saw, triangle, sine,
+  noise; pitch slides, envelopes, vibrato, arpeggio jumps, low-pass) into 33 effects
+  (`Sounds.cs`); `Music.cs` renders 16-bar synthwave loops at 32 kHz (kick, snare, hats, plucked
+  bass, detuned pad, echoing arpeggio): a calm one for the title, map and hangar (92 BPM, A
+  dorian), one per stage (112–126 BPM, minor keys) and the boss (140 BPM, E phrygian). Tracks
+  render on a worker thread on first use (about 0.25 s each; synchronously on the web) and
+  cross-fade. Effects have a minimum gap each, the hangar preview plays at 30%, and music ducks
+  when paused and on the results screen.
 
 ### 10.3 Technical plan
 - **Unity 6000.6.4f1, URP**, the same editor and package versions as Banners of the Realm.
@@ -354,7 +366,7 @@ port stays possible.
   outdated lines) stored in PlayerPrefs under `skyforge.save.v1` (works on PC, mobile and web).
   Content ids only, never display names.
 - **Builds:** Windows (with an installer script like Banners), web and Android. iOS waits until
-  a Mac with Xcode is available (decided).
+  a Mac with Xcode is available (decided). How to build each: docs/BUILDING.md.
 
 ---
 
@@ -376,7 +388,7 @@ port stays possible.
 | M2 | All 8 wing weapons and the core specials, the hangar loadout screen (done in v0.3.0; everything unlocked for testing until M3's shop) | Try every loadout on 1-1 |
 | M3 | Credits, shop, upgrades, results screen, medals, saves, world map (done in v0.5.0) | The full loop |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode (done in v0.6.0) | All of World 1 |
-| M5 | Audio, polish, settings, touch controls, mobile and web builds | v1 on all platforms |
+| M5 | Audio, polish, settings, touch controls, mobile and web builds (done in v0.7.0; not yet tried on a phone or in a browser) | v1 on all platforms |
 
 ---
 
