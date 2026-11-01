@@ -53,7 +53,9 @@ stages, enemies or art.
   make a net8.0 test project that includes `Assets/Skyforge/Simulation/**/*.cs` and
   `Assets/Skyforge/Tests/EditMode/**/*.cs` with NUnit 3, then `dotnet test`. The Game layer can be
   compile-checked against the `UnityEngine.Modules` NuGet reference assemblies plus small stubs
-  for the Input System / URP members it uses. Neither replaces playing it in Unity.
+  for the Input System / URP members it uses. Neither replaces playing it in Unity. Stubs must
+  also declare the other public types in those namespaces (e.g. the Input System's own
+  `PlayerInput` component), or name clashes slip through: ours is aliased in `PlayerControls.cs`.
 - **On Rob's PC (Editor open):** `bash Tools/claude/test.sh` runs the EditMode tests;
   `bash Tools/claude/test.sh '"TestA","TestB"'` runs named `SimulationTests`. `unity command
   --project-path "D:\Games\SkyforgeVanguard" <cmd>` drives the Editor (`recompile`, `eval`,

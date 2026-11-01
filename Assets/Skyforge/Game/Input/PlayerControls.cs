@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Skyforge.Simulation;
+// The Input System has its own PlayerInput component; ours is the simulation's input struct.
+using PlayerInput = Skyforge.Simulation.PlayerInput;
 
 namespace Skyforge.Game
 {
