@@ -276,6 +276,10 @@ port stays possible.
 - **Palette:** gunmetal, slate and deep navy for ships and terrain; desaturated, darkened
   backgrounds so the action stands out. Emissive accents: **player cyan/white**, **enemy
   red/magenta**, **enemy bullets orange/pink**, **credits gold**, **repair orbs green**.
+- **Player ship look (decided by Rob, 2026-11-01):** "faceted alloy" after the Kestrel concept:
+  a light matte alloy delta interceptor with a teal canopy, graphite nacelles and small peach
+  wingtip panels (brief in docs/BLENDER.md §8). Enemies keep the dark hull and red-magenta glow
+  until Rob reviews the new ship.
 - **Background (decided by Rob, 2026-11-01):** plain black with small, scattered stars that stream
   from the top of the screen to the bottom in three parallax layers, giving the sense of flying
   forward. This replaced the earlier scrolling terrain and ocean backdrops. The stage table's

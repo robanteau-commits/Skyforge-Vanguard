@@ -84,17 +84,25 @@ are given in Blender coordinates relative to the ship's origin (in game units).
 
 ## 5. Look
 
-- **Dark sci-fi low poly** (DESIGN §10.1): flat-shaded facets that stay visible. Shade Flat,
-  no subdivision, no textures. Strong, readable silhouettes from above.
+- **Low poly, flat-shaded** (DESIGN §10.1): facets that stay visible. Shade Flat, no
+  subdivision, no textures. Strong, readable silhouettes from above.
+- **Player ship style: "faceted alloy"** (Rob's pick, 2026-11-01, from an AI-generated concept
+  sheet; recreate the look as our own model, don't trace the image). It's a clean, studio-model
+  feel: a light matte alloy airframe built from large crisp facets, a faceted teal canopy,
+  darker graphite engine nacelles and intakes, a row of small dark vent slots along the spine,
+  and small peach panels on the wingtips. See §8 for the Vanguard brief.
+- **Enemies** keep the dark hull with red-magenta glow for now; Rob decides their restyle after
+  seeing the new Vanguard in the game.
 - Use only these **material names**. The colours you set in Blender are just for preview, because
   the game swaps each slot for its own material by name:
 
 | Material name | Used for | Game colour |
 |---|---|---|
-| `Hull` | Main armour | Gunmetal |
-| `HullLight` | Panels, trim | Light grey metal |
-| `HullDark` | Nozzles, intakes, recesses | Near-black |
-| `Canopy` | Cockpit glass | Dark blue glass |
+| `Hull` | Player: main airframe | Light matte alloy |
+| `HullLight` | Player: brighter panels, trim | Near-white alloy |
+| `HullDark` | Player: nacelles, nozzles, intakes, vent slots | Dark graphite |
+| `Canopy` | Cockpit glass | Teal glass |
+| `Accent` | Player: small wingtip panels only | Muted peach (matte; keep it small so it never reads as an enemy bullet) |
 | `Glow` | Player glow: edge strips, core, flames, muzzles | Bright cyan (blooms) |
 | `GlowSoft` | Dimmer player glow | Soft cyan |
 | `EnemyHull` | Enemy armour | Dark purple-black |
@@ -121,12 +129,34 @@ Unity applies the matching import settings automatically to anything in
 
 ## 7. Order of work
 
-1. `vanguard`: the player ship. Keep the current look (sleek delta wing, canards, canted twin
-   fins, twin nozzles, glowing leading edges) and refine it.
+1. **Rebuild `vanguard` in the Kestrel style (§8).** Rob's current priority.
 2. `vanguard_core`, `vanguard_flame`.
-3. `pod_pulseRepeater_lv1` … `_lv5`.
+3. `pod_pulseRepeater_lv1` … `_lv5`, styled to match: graphite nacelle pods with glowing muzzles.
 4. `enemy_practiceDrone`.
 5. The M1 enemies, now in the game with code-built stand-ins: `enemy_gnat`, `enemy_needle`,
    `enemy_ramDrone`, `enemy_spineMine`, `enemy_warden`, `enemy_bastion`, `prop_asteroid`.
    Press **7** in the game for the Armada Sampler, which shows every enemy.
 6. Then each new enemy or weapon as the milestones need it.
+
+## 8. The Vanguard, Kestrel style (current task)
+
+Rebuild `vanguard` (airframe only, as before) as a **delta interceptor** in the faceted-alloy
+style. Keep the size and mount points of §4 so the game's pods, core, flames and hitbox still fit:
+nose at Y −1.75, tail at Y +1.5, wingtips at X ±1.6, about 0.6 tall, pod mounts under the wings
+at X ±1.0, Z −0.13.
+
+- **Wings:** a big, clean delta (or cranked delta) with a sharp leading edge, built from a few
+  large flat facets, `Hull` on top with a `HullLight` panel inset. Small **`Accent` peach panels
+  on each wingtip** (a few faces, not the whole tip).
+- **Fuselage:** a faceted, slightly flattened body with a pointed nose; the **teal `Canopy`**
+  sits forward as a faceted, gem-like bubble.
+- **Tail:** two vertical or slightly canted fins in `HullLight`.
+- **Engines:** dark graphite (`HullDark`) nacelle or nacelles at the back with visible intakes;
+  the exhausts line up with the flame mounts at X ±0.2, Y +1.5.
+- **Details:** a short row of small `HullDark` vent slots along the spine behind the canopy; a
+  thin `Glow` strip on each wing's leading edge (it's the player's cyan identity in play).
+- **Budget:** ≤ 1,500 triangles. Read it from above first: the delta and the canopy should be
+  clear at the game's size (the ship is about 3 units long on an 18-unit-wide screen).
+- Show Rob a top view and a 3/4 view before exporting; then export, check it in the game
+  (it should point up the screen), and commit the `.blend`, `.fbx` and Unity's `.fbx.meta`.
+

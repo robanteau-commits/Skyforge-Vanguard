@@ -14,11 +14,13 @@ namespace Skyforge.Game
         public static readonly Color Clear = Color.black;
         public static readonly Color PanelBg = new Color(0.03f, 0.04f, 0.06f, 0.92f);
 
-        // Player ship
-        public static readonly Color Hull = new Color(0.21f, 0.23f, 0.27f);
-        public static readonly Color HullLight = new Color(0.44f, 0.47f, 0.52f);
-        public static readonly Color HullDark = new Color(0.07f, 0.08f, 0.1f);
-        public static readonly Color Canopy = new Color(0.03f, 0.09f, 0.14f);
+        // Player ship: "faceted alloy" (Rob's pick, the Kestrel concept). Light matte alloy hull,
+        // brighter panels, dark graphite nacelles, teal canopy, small peach wingtip accents.
+        public static readonly Color Hull = new Color(0.66f, 0.68f, 0.71f);
+        public static readonly Color HullLight = new Color(0.84f, 0.85f, 0.86f);
+        public static readonly Color HullDark = new Color(0.12f, 0.14f, 0.17f);
+        public static readonly Color Canopy = new Color(0.05f, 0.36f, 0.4f);
+        public static readonly Color Accent = new Color(0.86f, 0.6f, 0.47f);
         public static readonly Color PlayerGlow = new Color(0.3f, 0.9f, 1f);
         public static readonly Color PlayerShot = new Color(0.45f, 0.95f, 1f);
 

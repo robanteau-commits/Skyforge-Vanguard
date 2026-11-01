@@ -48,10 +48,12 @@ namespace Skyforge.Game
 
         // ------------------------------------------------------------------ the game's materials
 
-        public static Material Hull => Lit("hull", Palette.Hull, 0.55f, 0.4f);
-        public static Material HullLight => Lit("hullLight", Palette.HullLight, 0.5f, 0.45f);
-        public static Material HullDark => Lit("hullDark", Palette.HullDark, 0.4f, 0.3f);
-        public static Material Canopy => Lit("canopy", Palette.Canopy, 0.2f, 0.92f);
+        // Matte, faceted alloy: low metallic so the facets read from their lighting, not reflections.
+        public static Material Hull => Lit("hull", Palette.Hull, 0.15f, 0.35f);
+        public static Material HullLight => Lit("hullLight", Palette.HullLight, 0.1f, 0.4f);
+        public static Material HullDark => Lit("hullDark", Palette.HullDark, 0.3f, 0.35f);
+        public static Material Canopy => Lit("canopy", Palette.Canopy, 0.2f, 0.9f);
+        public static Material Accent => Lit("accent", Palette.Accent, 0f, 0.3f);
         public static Material PlayerGlow => Glow("playerGlow", Palette.PlayerGlow, 3f);
         public static Material PlayerGlowSoft => Glow("playerGlowSoft", Palette.PlayerGlow, 1.4f);
         public static Material PlayerShot => Glow("playerShot", Palette.PlayerShot, 4f);

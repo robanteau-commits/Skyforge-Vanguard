@@ -89,6 +89,7 @@ namespace Skyforge.Game
                 case "hulllight": return Mats.HullLight;
                 case "hulldark": return Mats.HullDark;
                 case "canopy": return Mats.Canopy;
+                case "accent": return Mats.Accent;
                 case "glow": return Mats.PlayerGlow;
                 case "glowsoft": return Mats.PlayerGlowSoft;
                 case "enemyhull": return Mats.EnemyHull;
