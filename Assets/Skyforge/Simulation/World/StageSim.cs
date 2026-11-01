@@ -15,6 +15,8 @@ namespace Skyforge.Simulation
         public float CoreChargeMultiplier = 1f;
         /// <summary>Play field width: <see cref="Field.Width"/> (portrait, phones) or <see cref="Field.WideWidth"/> (PC, web).</summary>
         public float FieldWidth = Field.Width;
+        /// <summary>Airframe upgrade levels per <see cref="AirframeStat"/> (null = stock ship).</summary>
+        public int[] Airframe;
     }
 
     /// <summary>
@@ -79,6 +81,7 @@ namespace Skyforge.Simulation
             XScale = HalfWidth / Field.HalfWidth;
             _practice = Setup.PracticeDrones ?? Stage == null;
             _rng = new Rng(Setup.Seed);
+            Simulation.Airframe.Apply(Player, Setup.Airframe);
             Player.Pos = new Vec2(0f, -10f);
             // Offset the right wing by half a shot so the two wings alternate.
             var right = Loadout.RightWing.Stats;

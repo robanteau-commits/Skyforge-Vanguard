@@ -39,11 +39,17 @@ stages, enemies or art.
   for edges). Stages are authored for 18 wide and spread out. `Simulation/Content/` — weapons
   (`Weapons.cs`), enemy stats (`Enemies.cs`, `EnemyDefs`), stage timelines (`Stages.cs`, written
   with `StageBuilder`: 1-1 First Light and the Armada Sampler test stage).
+  `Simulation/Progress/` — `Progress` (credits, owned weapons and levels, airframe levels, fit,
+  stage records and medals; all shop rules; `Save`/`Load` text) and `Airframe` (upgrade costs and
+  stat formulas, applied through `StageSetup.Airframe`). `Stages.World1` is the map order.
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step
   loop with render interpolation. `PlayfieldCamera` fits the field in a 9:16 viewport (side panels
   on wide screens). `Input/PlayerControls` = keyboard/mouse/gamepad/touch → `PlayerInput`.
-  `Hud` is IMGUI (partial: `Hud.Hangar.cs` is the loadout screen; the game starts there with a live
-  practice preview behind it). `WeaponViews` draws beams, the Solar Lance, the Aegis ring, arcs and
+  `GameRunner` has three screens (Map, Hangar, Flying), owns the `Progress` (loaded and saved by
+  `SaveStore`, PlayerPrefs) and banks each finished stage (`RecordIfFinished`; not in sandbox,
+  practice or the sampler). `Hud` is IMGUI (partial: `Hud.Map.cs` is the world map, where the
+  game starts, over `Art/GlobeModel`; `Hud.Hangar.cs` is the shop and loadout screen with a live
+  practice preview behind it; results in `Hud.cs`). `WeaponViews` draws beams, the Solar Lance, the Aegis ring, arcs and
   wingmates. Field (X, Y) maps to world (x, 0, z). The background (`Game/Art/Backdrop.cs`)
   is black space with a parallax starfield at y = −14 (Rob's call, replacing the terrain and
   ocean backdrops).
@@ -58,7 +64,8 @@ stages, enemies or art.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
 - `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
   `StageTests` (enemies, damage, combo, pickups, stage flow), `WeaponTests` (every wing weapon
-  and core), `LevelTests` (what each weapon level adds) and `FieldTests` (the wide PC field).
+  and core), `LevelTests` (what each weapon level adds), `FieldTests` (the wide PC field) and
+  `ProgressTests` (shop, airframe, medals, unlocks, save text).
 
 ## Verifying changes
 - **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:

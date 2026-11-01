@@ -86,7 +86,7 @@ World map ──► pick stage ──► Hangar (fit L wing / R wing / core, buy
 | Shield | 40 | +12 | 100 |
 | Shield regen | 4 /s after 4 s without a hit (Rob: the original 10 /s after 2.5 s felt too fast) | −0.4 s delay, +1.2 /s | 2.0 s, 10 /s |
 | Thrusters (max speed) | 14 u/s | +1.5 | 21.5 u/s |
-| Magnet range | 2.5 u | +1.0 | 7.5 u |
+| Magnet range | 4 u (was 2.5; raised in v0.5.0 because only a quarter of the shards got collected) | +1.0 | 9 u |
 | Capacitor (core charge rate) | 100% | +10% | 150% |
 
 Airframe upgrade costs (each stat): **250 / 500 / 900 / 1500 / 2400** credits. **[TUNE]**
@@ -176,15 +176,17 @@ An alien drone armada. Its ships are angular and dark, with **red and magenta** 
 they never get mistaken for the player (who is **cyan and white**). Enemy bullets are **hot
 orange/pink with a dark outline**, the brightest things on screen, so they always read.
 
+Credits were tripled in v0.5.0 (Rob's call) so a run of 1-1 pays roughly the 600 that §4.4 aims for.
+
 | Enemy | Role | HP | Behaviour | Bullets | Score | Credits |
 |---|---|---|---|---|---|---|
-| **Gnat** | Swarm fighter | 6 | Flies in formations (V, line, snake, swirl) along spline paths | Rare single aimed shots | 50 | 2 |
-| **Needle** | Diving fighter | 20 | Enters, pauses, fires, then dives off-screen | 3-shot aimed burst | 120 | 5 |
-| **Ram Drone** | Kamikaze | 14 | Locks onto you after 0.7 s and charges (telegraphed by a red flash) | None; 25 ram damage | 100 | 4 |
-| **Spine Mine** | Mine | 10 | Drifts with the scroll; when shot or approached within 2 u it bursts into an 8-bullet ring | Ring on death | 60 | 2 |
-| **Warden** | Gunship | 160 | Slow, armoured, stays on screen for a while | Rotating rings and fans | 600 | 20 |
-| **Bastion** | Turret on a drifting asteroid (Rob's call, 2026-11-01: the background is space, so no ground) | 90 | Drifts down the screen with its asteroid and turns to track you | Aimed 3-shot bursts | 400 | 12 |
-| **Brood Carrier** | Mini-boss | 700 | Crosses slowly, launching Gnats; it has 2 destructible launch bays | Spread bursts | 2500 | 80 |
+| **Gnat** | Swarm fighter | 6 | Flies in formations (V, line, snake, swirl) along spline paths | Rare single aimed shots | 50 | 6 |
+| **Needle** | Diving fighter | 20 | Enters, pauses, fires, then dives off-screen | 3-shot aimed burst | 120 | 15 |
+| **Ram Drone** | Kamikaze | 14 | Locks onto you after 0.7 s and charges (telegraphed by a red flash) | None; 25 ram damage | 100 | 12 |
+| **Spine Mine** | Mine | 10 | Drifts with the scroll; when shot or approached within 2 u it bursts into an 8-bullet ring | Ring on death | 60 | 6 |
+| **Warden** | Gunship | 160 | Slow, armoured, stays on screen for a while | Rotating rings and fans | 600 | 60 |
+| **Bastion** | Turret on a drifting asteroid (Rob's call, 2026-11-01: the background is space, so no ground) | 90 | Drifts down the screen with its asteroid and turns to track you | Aimed 3-shot bursts | 400 | 36 |
+| **Brood Carrier** | Mini-boss | 700 | Crosses slowly, launching Gnats; it has 2 destructible launch bays | Spread bursts | 2500 | 240 |
 
 **Bullet rules (Normal):** enemy bullet speed 6–10 u/s, at most ~250 enemy bullets on screen in
 World 1, and every attack is telegraphed (a muzzle glow 0.3 s before firing). **[TUNE]**
@@ -251,8 +253,8 @@ and easy for me to write and balance.
   2. **Untouched:** finish without any **hull** damage (shield damage allowed).
   3. **Purge:** destroy ≥ 90% of the stage's enemies.
 - Each medal pays a **one-time credit bonus** (stage-dependent, ~150–400) the first time it's earned.
-  Medal totals show on the world map. **[DECIDE]** Should medals also unlock anything (e.g. pod
-  colour schemes, or Veteran early)?
+  Medal totals show on the world map. Medals pay credits only for now (decided in M3);
+  cosmetic unlocks may come later. 1-1 pays 250 / 200 / 150 (Ace at 18,000).
 
 ---
 
@@ -336,8 +338,9 @@ port stays possible.
   target, with a reduced quality tier for low-end phones.
 - **Collision:** circles against circles and against capsules (for beams), using a uniform spatial
   grid.
-- **Saves:** a JSON file in `persistentDataPath` (works on PC, mobile and web, which uses
-  IndexedDB). It's versioned so later updates won't break saves.
+- **Saves:** versioned plain `key=value` text (`Progress.Save`/`Load`, tolerant of damaged or
+  outdated lines) stored in PlayerPrefs under `skyforge.save.v1` (works on PC, mobile and web).
+  Content ids only, never display names.
 - **Builds:** Windows (with an installer script like Banners), web and Android. iOS waits until
   a Mac with Xcode is available (decided).
 
@@ -359,7 +362,7 @@ port stays possible.
 | M0 | Project scaffold, scene, camera, ship flying, Pulse Repeater | Fly and shoot in an empty sky |
 | M1 | Enemies, bullets, damage, shield and hull, stage timeline; stage 1-1 (done in v0.2.0) | A full first stage |
 | M2 | All 8 wing weapons and the core specials, the hangar loadout screen (done in v0.3.0; everything unlocked for testing until M3's shop) | Try every loadout on 1-1 |
-| M3 | Credits, shop, upgrades, results screen, medals, saves, world map | The full loop |
+| M3 | Credits, shop, upgrades, results screen, medals, saves, world map (done in v0.5.0) | The full loop |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | All of World 1 |
 | M5 | Audio, polish, settings, touch controls, mobile and web builds | v1 on all platforms |
 
@@ -370,5 +373,5 @@ Answered (2026-11-01): **all four cores** in v1; failed runs **keep 50%** of cre
 so iOS waits (Windows, web and Android first). Approved as written.
 
 Still open:
-1. **Medal rewards:** credits only, or cosmetic unlocks too?
+1. ~~Medal rewards~~: credits only for now (M3).
 2. **Music:** generated in code for now; real tracks before release?

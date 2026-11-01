@@ -4,23 +4,51 @@ using Skyforge.Simulation;
 namespace Skyforge.Game
 {
     /// <summary>
-    /// The hangar: pick a weapon and level for the left wing, the right wing and the core, choose a
-    /// stage, launch. Behind it the ship flies a live practice preview with the current loadout.
-    /// In M2 everything is unlocked for testing; M3 adds prices and the shop.
+    /// The hangar and shop (docs/DESIGN.md §9): tabs for the left wing, right wing, core and the
+    /// airframe. Owned weapons fit with a click; others show their price and a BUY button; owned
+    /// ones show UPGRADE with the next level's cost; the airframe tab upgrades the ship's stats.
+    /// Behind it the ship flies a live practice preview of the current loadout.
+    /// In the sandbox everything is free at any level and nothing is saved.
     /// Wide screens use both side panels; phones get a compact panel over the lower field.
     /// </summary>
     public sealed partial class Hud
     {
-        WeaponSlot _slot = WeaponSlot.Wing;
-        Side _side = Side.Left;
+        enum Tab { LeftWing, RightWing, Core, Airframe }
 
-        Fitted SelectedFit
+        Tab _tab = Tab.LeftWing;
+        WeaponDef _viewing;
+        AirframeStat _stat = AirframeStat.Hull;
+
+        WeaponSlot TabSlot => _tab == Tab.Core ? WeaponSlot.Core : WeaponSlot.Wing;
+        Side TabSide => _tab == Tab.RightWing ? Side.Right : Side.Left;
+
+        Fitted TabFit
         {
             get
             {
                 var l = _runner.Loadout;
-                return _slot == WeaponSlot.Core ? l.Core : l.Wing(_side);
+                return _tab == Tab.Core ? l.Core : _tab == Tab.RightWing ? l.RightWing : l.LeftWing;
             }
+        }
+
+        /// <summary>The weapon the details panel shows: the one clicked, else the one fitted.</summary>
+        WeaponDef Viewing
+        {
+            get
+            {
+                if (_viewing != null && _viewing.Slot == TabSlot) return _viewing;
+                return TabFit.Weapon;
+            }
+        }
+
+        int OwnedLevel(WeaponDef w)
+        {
+            if (_runner.Sandbox)
+            {
+                var f = TabFit;
+                return f.Weapon == w ? f.Level : 1;
+            }
+            return _runner.Progress.LevelOf(w.Id);
         }
 
         void Hangar(Rect field, float s, bool panels)
@@ -30,10 +58,8 @@ namespace Skyforge.Game
                 DrawRect(new Rect(0f, 0f, field.x, Screen.height), Palette.PanelBg);
                 DrawRect(new Rect(field.xMax, 0f, Screen.width - field.xMax, Screen.height), Palette.PanelBg);
                 float pad = 24f * s;
-                var left = new Rect(pad, pad, field.x - pad * 2f, Screen.height - pad * 2f);
-                var right = new Rect(field.xMax + pad, pad, Screen.width - field.xMax - pad * 2f, Screen.height - pad * 2f);
-                HangarSlotsAndList(left, s);
-                HangarDetails(right, s);
+                HangarList(new Rect(pad, pad, field.x - pad * 2f, Screen.height - pad * 2f), s);
+                HangarDetails(new Rect(field.xMax + pad, pad, Screen.width - field.xMax - pad * 2f, Screen.height - pad * 2f), s);
             }
             else
             {
@@ -43,46 +69,140 @@ namespace Skyforge.Game
 
         // ------------------------------------------------------------------ wide layout
 
-        void HangarSlotsAndList(Rect r, float s)
+        void HangarList(Rect r, float s)
         {
             float y = r.y;
-            Line(ref y, r, "HANGAR", _title, 40f * s);
-            Line(ref y, r, "Fit a weapon to each wing and the core. Everything is unlocked for testing; prices arrive with the shop.", _small, 44f * s);
+            Line(ref y, r, "HANGAR", _title, 38f * s);
+            HangarHeader(ref y, r, s);
             y += 8f * s;
-            SlotButtons(ref y, r, s, vertical: true);
-            y += 14f * s;
-            Line(ref y, r, _slot == WeaponSlot.Core ? "CORE SPECIALS" : (_side == Side.Left ? "LEFT WING" : "RIGHT WING") + " WEAPONS", _label, 24f * s);
-            WeaponList(ref y, r, s, columns: 1, rowHeight: 44f * s);
+            Tabs(ref y, r, s, vertical: true);
+            y += 12f * s;
+            if (_tab == Tab.Airframe) AirframeList(ref y, r, s, 44f * s);
+            else WeaponList(ref y, r, s, columns: 1, rowHeight: 46f * s);
+        }
+
+        /// <summary>Credits and where you're going (or the sandbox notice).</summary>
+        void HangarHeader(ref float y, Rect r, float s)
+        {
+            if (_runner.Sandbox)
+            {
+                Line(ref y, r, "SANDBOX: everything free, nothing saved", new GUIStyle(_small) { normal = { textColor = Palette.HudGold } }, 22f * s);
+            }
+            else
+            {
+                Line(ref y, r, _runner.Progress.Credits.ToString("N0") + " credits", _gold, 32f * s);
+            }
+            var st = _runner.SelectedStage;
+            Line(ref y, r, "Next: " + (st == null ? "practice" : st == Stages.ArmadaSampler ? st.Name + " (test)" : "Stage " + st.Id + " " + st.Name), _small, 22f * s);
         }
 
         void HangarDetails(Rect r, float s)
         {
             float y = r.y;
-            var fit = SelectedFit;
-            if (!fit.IsEmpty)
+            if (_tab == Tab.Airframe) AirframeDetails(ref y, r, s);
+            else WeaponDetails(ref y, r, s);
+
+            if (_runner.Sandbox)
             {
-                Line(ref y, r, fit.Weapon.Name, _heading, 34f * s);
-                Line(ref y, r, fit.Weapon.Role, _label, 24f * s);
-                Line(ref y, r, fit.Weapon.Description, _body, 50f * s);
-                y += 6f * s;
+                y += 10f * s;
+                Line(ref y, r, "STAGE", _label, 22f * s);
+                StageButtons(ref y, r, s);
+            }
+
+            float launchH = 60f * s;
+            float by = r.yMax - launchH - 30f * s;
+            if (GUI.Button(new Rect(r.x, by - 44f * s, r.width * 0.4f, 36f * s), "< MAP", _button)) _runner.OpenMap();
+            if (GUI.Button(new Rect(r.x, by, r.width, launchH), "LAUNCH", _bigButton)) _runner.Launch();
+            GUI.Label(new Rect(r.x, r.yMax - 26f * s, r.width, 24f * s), "Enter: launch · Esc: map · v" + Application.version, _small);
+        }
+
+        void WeaponDetails(ref float y, Rect r, float s)
+        {
+            var w = Viewing;
+            if (w == null) return;
+            bool owned = _runner.Sandbox || _runner.Progress.Owns(w);
+            int level = owned ? OwnedLevel(w) : 1;
+            Line(ref y, r, w.Name, _heading, 34f * s);
+            Line(ref y, r, w.Role, _label, 24f * s);
+            Line(ref y, r, w.Description, _body, 66f * s);
+            y += 4f * s;
+
+            if (_runner.Sandbox)
+            {
                 Line(ref y, r, "LEVEL", _label, 22f * s);
-                LevelButtons(ref y, r, s, fit);
-                y += 8f * s;
-                Line(ref y, r, StatsText(fit.Weapon, fit.Level), _body, 120f * s);
-                if (_slot == WeaponSlot.Wing)
+                LevelButtons(ref y, r, s, new Fitted(w, level));
+            }
+            else
+            {
+                Line(ref y, r, owned ? "LEVEL " + level + " OF " + w.MaxLevel : "NOT OWNED", _label, 22f * s);
+                LevelPips(ref y, r, s, owned ? level : 0, w.MaxLevel);
+            }
+            y += 6f * s;
+            Line(ref y, r, StatsText(w, level), _body, 112f * s);
+
+            if (!_runner.Sandbox)
+            {
+                var p = _runner.Progress;
+                if (!owned)
                 {
-                    if (GUI.Button(new Rect(r.x, y, r.width, 34f * s), "Fit the same to the " + (_side == Side.Left ? "right" : "left") + " wing", _button))
-                        _runner.Fit(WeaponSlot.Wing, _side == Side.Left ? Side.Right : Side.Left, fit.Weapon, fit.Level);
+                    bool can = p.CanBuy(w);
+                    if (ShopButton(new Rect(r.x, y, r.width, 44f * s), "BUY · " + w.Price.ToString("N0") + " credits", can)) _runner.Buy(w, TabSide);
+                    y += 50f * s;
+                }
+                else if (p.UpgradeCost(w) >= 0)
+                {
+                    int cost = p.UpgradeCost(w);
+                    if (ShopButton(new Rect(r.x, y, r.width, 44f * s), "UPGRADE TO LV " + (level + 1) + " · " + cost.ToString("N0") + " credits", p.CanUpgrade(w))) _runner.Upgrade(w);
+                    y += 50f * s;
+                    GUI.Label(new Rect(r.x, y, r.width, 40f * s), "Lv " + (level + 1) + ": " + StatsText(w, level + 1).Split('\n')[0], _small);
                     y += 40f * s;
                 }
+                else
+                {
+                    Line(ref y, r, "Fully upgraded", _label, 24f * s);
+                }
+                if (owned && TabFit.Weapon != w)
+                {
+                    if (GUI.Button(new Rect(r.x, y, r.width, 36f * s), "FIT TO " + TabName(), _button)) _runner.Fit(TabSlot, TabSide, w, level);
+                    y += 42f * s;
+                }
             }
-            y += 12f * s;
-            Line(ref y, r, "STAGE", _label, 22f * s);
-            StageButtons(ref y, r, s);
+            if (TabSlot == WeaponSlot.Wing && owned && TabFit.Weapon == w)
+            {
+                var other = TabSide == Side.Left ? Side.Right : Side.Left;
+                if (GUI.Button(new Rect(r.x, y, r.width, 34f * s), "Fit the same to the " + (other == Side.Left ? "left" : "right") + " wing", _button))
+                    _runner.Fit(WeaponSlot.Wing, other, w, level);
+                y += 40f * s;
+            }
+        }
 
-            float launchH = 64f * s;
-            if (GUI.Button(new Rect(r.x, r.yMax - launchH - 30f * s, r.width, launchH), "LAUNCH", _bigButton)) _runner.Launch();
-            GUI.Label(new Rect(r.x, r.yMax - 26f * s, r.width, 24f * s), "Enter to launch · v" + Application.version, _small);
+        string TabName() => _tab == Tab.Core ? "CORE" : _tab == Tab.RightWing ? "RIGHT WING" : "LEFT WING";
+
+        void AirframeDetails(ref float y, Rect r, float s)
+        {
+            int lv = _runner.Sandbox ? 0 : _runner.Progress.AirframeLevels[(int)_stat];
+            Line(ref y, r, Airframe.Names[(int)_stat], _heading, 34f * s);
+            Line(ref y, r, Airframe.Descriptions[(int)_stat], _body, 48f * s);
+            Line(ref y, r, "LEVEL " + lv + " OF " + Airframe.MaxLevel, _label, 22f * s);
+            LevelPips(ref y, r, s, lv, Airframe.MaxLevel);
+            y += 6f * s;
+            Line(ref y, r, "Now: " + Airframe.Value(_stat, lv), _body, 26f * s);
+            if (_runner.Sandbox)
+            {
+                Line(ref y, r, "Upgrades are bought outside the sandbox.", _small, 26f * s);
+                return;
+            }
+            var p = _runner.Progress;
+            int cost = p.AirframeCost(_stat);
+            if (cost < 0)
+            {
+                Line(ref y, r, "Fully upgraded", _label, 24f * s);
+                return;
+            }
+            Line(ref y, r, "Next: " + Airframe.Value(_stat, lv + 1), _body, 26f * s);
+            y += 4f * s;
+            if (ShopButton(new Rect(r.x, y, r.width, 44f * s), "UPGRADE · " + cost.ToString("N0") + " credits", p.CanUpgradeAirframe(_stat))) _runner.UpgradeAirframe(_stat);
+            y += 50f * s;
         }
 
         // ------------------------------------------------------------------ compact (phone) layout
@@ -90,88 +210,150 @@ namespace Skyforge.Game
         void HangarCompact(Rect field, float s)
         {
             float pad = 8f * s;
-            var panel = new Rect(field.x, field.y + field.height * 0.4f, field.width, field.height * 0.6f);
+            var panel = new Rect(field.x, field.y + field.height * 0.36f, field.width, field.height * 0.64f);
             DrawRect(panel, Palette.PanelBg);
             var r = new Rect(panel.x + pad, panel.y + pad, panel.width - pad * 2f, panel.height - pad * 2f);
             float y = r.y;
-            SlotButtons(ref y, r, s, vertical: false);
+            HangarHeader(ref y, r, s);
+            Tabs(ref y, r, s, vertical: false);
             y += 6f * s;
-            WeaponList(ref y, r, s, columns: 2, rowHeight: 40f * s);
-            y += 4f * s;
-            var fit = SelectedFit;
-            if (!fit.IsEmpty)
+            if (_tab == Tab.Airframe)
             {
-                LevelButtons(ref y, r, s, fit);
-                y += 4f * s;
-                GUI.Label(new Rect(r.x, y, r.width, 40f * s), StatsText(fit.Weapon, fit.Level).Replace("\n", " · "), _small);
-                y += 42f * s;
+                AirframeList(ref y, r, s, 34f * s);
+                AirframeDetails(ref y, r, s);
             }
-            StageButtons(ref y, r, s);
-            float launchH = 52f * s;
-            if (GUI.Button(new Rect(r.x, r.yMax - launchH, r.width, launchH), "LAUNCH", _bigButton)) _runner.Launch();
+            else
+            {
+                WeaponList(ref y, r, s, columns: 2, rowHeight: 38f * s);
+                var w = Viewing;
+                if (w != null)
+                {
+                    bool owned = _runner.Sandbox || _runner.Progress.Owns(w);
+                    int level = owned ? OwnedLevel(w) : 1;
+                    if (_runner.Sandbox) LevelButtons(ref y, r, s, new Fitted(w, level));
+                    GUI.Label(new Rect(r.x, y, r.width, 40f * s), StatsText(w, level).Replace("\n", " · "), _small);
+                    y += 42f * s;
+                    if (!_runner.Sandbox)
+                    {
+                        var p = _runner.Progress;
+                        if (!owned && ShopButton(new Rect(r.x, y, r.width, 38f * s), "BUY · " + w.Price.ToString("N0"), p.CanBuy(w))) _runner.Buy(w, TabSide);
+                        else if (owned && p.UpgradeCost(w) >= 0 && ShopButton(new Rect(r.x, y, r.width, 38f * s), "UPGRADE TO LV " + (level + 1) + " · " + p.UpgradeCost(w).ToString("N0"), p.CanUpgrade(w))) _runner.Upgrade(w);
+                    }
+                }
+            }
+            float launchH = 48f * s;
+            if (GUI.Button(new Rect(r.x, r.yMax - launchH, r.width * 0.3f, launchH), "< MAP", _button)) _runner.OpenMap();
+            if (GUI.Button(new Rect(r.x + r.width * 0.32f, r.yMax - launchH, r.width * 0.68f, launchH), "LAUNCH", _bigButton)) _runner.Launch();
             GUI.Label(new Rect(field.x + pad, field.y + pad, field.width, 30f * s), "HANGAR", _title);
         }
 
         // ------------------------------------------------------------------ pieces
 
-        void SlotButtons(ref float y, Rect r, float s, bool vertical)
+        void Tabs(ref float y, Rect r, float s, bool vertical)
         {
             var l = _runner.Loadout;
-            var slots = new[]
+            var tabs = new[]
             {
-                (WeaponSlot.Wing, Side.Left, "LEFT WING", l.LeftWing),
-                (WeaponSlot.Wing, Side.Right, "RIGHT WING", l.RightWing),
-                (WeaponSlot.Core, Side.Left, "CORE", l.Core),
+                (Tab.LeftWing, "LEFT WING", l.LeftWing),
+                (Tab.RightWing, "RIGHT WING", l.RightWing),
+                (Tab.Core, "CORE", l.Core),
+                (Tab.Airframe, "AIRFRAME", default(Fitted)),
             };
-            float h = vertical ? 48f * s : 44f * s;
-            float w = vertical ? r.width : (r.width - 8f * s) / 3f;
-            for (int i = 0; i < slots.Length; i++)
+            float gap = 4f * s;
+            float h = vertical ? 44f * s : 40f * s;
+            float w = vertical ? r.width : (r.width - gap * 3f) / 4f;
+            for (int i = 0; i < tabs.Length; i++)
             {
-                var (slot, side, label, fit) = slots[i];
-                bool on = _slot == slot && (slot == WeaponSlot.Core || _side == side);
-                var rect = vertical ? new Rect(r.x, y + i * (h + 6f * s), w, h) : new Rect(r.x + i * (w + 4f * s), y, w, h);
-                string text = label + "\n" + (fit.IsEmpty ? "empty" : fit.Weapon.Name + "  Lv " + fit.Level);
-                if (GUI.Button(rect, text, on ? _buttonOn : _button)) { _slot = slot; _side = side; }
+                var (tab, label, fit) = tabs[i];
+                var rect = vertical ? new Rect(r.x, y + i * (h + gap), w, h) : new Rect(r.x + i * (w + gap), y, w, h);
+                string text = tab == Tab.Airframe ? label + (vertical ? "\nhull, shield, speed, magnet…" : "")
+                    : label + "\n" + (fit.IsEmpty ? "empty" : fit.Weapon.Name + (vertical ? "  Lv " + fit.Level : ""));
+                if (GUI.Button(rect, text, _tab == tab ? _buttonOn : _button)) { _tab = tab; _viewing = null; }
             }
-            y += vertical ? slots.Length * (h + 6f * s) : h;
+            y += vertical ? tabs.Length * (h + gap) : h;
         }
 
         void WeaponList(ref float y, Rect r, float s, int columns, float rowHeight)
         {
-            var list = _slot == WeaponSlot.Core ? Weapons.CoreWeapons : Weapons.WingWeapons;
-            var current = SelectedFit;
+            var list = _tab == Tab.Core ? Weapons.CoreWeapons : Weapons.WingWeapons;
+            var fitted = TabFit.Weapon;
+            var viewing = Viewing;
             float gap = 4f * s;
             float w = (r.width - gap * (columns - 1)) / columns;
+            int small = Mathf.RoundToInt(12 * s);
             for (int i = 0; i < list.Length; i++)
             {
                 var weapon = list[i];
                 int col = i % columns, row = i / columns;
                 var rect = new Rect(r.x + col * (w + gap), y + row * (rowHeight + gap), w, rowHeight);
-                bool on = current.Weapon == weapon;
-                string text = columns == 1 ? weapon.Name + "\n<size=" + Mathf.RoundToInt(12 * s) + ">" + weapon.Role + "</size>" : weapon.Name;
-                var style = on ? _buttonOn : _button;
+                bool owned = _runner.Sandbox || _runner.Progress.Owns(weapon);
+                string status = _runner.Sandbox ? "" : owned ? "Lv " + _runner.Progress.LevelOf(weapon.Id) : weapon.Price.ToString("N0") + " cr";
+                string text = columns == 1
+                    ? weapon.Name + "   <size=" + small + ">" + status + "</size>\n<size=" + small + ">" + weapon.Role + "</size>"
+                    : weapon.Name + (status.Length > 0 ? "  <size=" + small + ">" + status + "</size>" : "");
+                var style = weapon == fitted ? _buttonOn : weapon == viewing ? _buttonView : owned ? _button : _buttonLocked;
                 style.richText = true;
-                if (GUI.Button(rect, text, style) && !on)
-                    _runner.Fit(_slot, _side, weapon, current.IsEmpty ? 1 : current.Level);
+                if (GUI.Button(rect, text, style))
+                {
+                    _viewing = weapon;
+                    // Owned weapons fit straight away (so the preview shows them); others just open their details.
+                    if (owned && weapon != fitted) _runner.Fit(TabSlot, TabSide, weapon, OwnedLevel(weapon));
+                }
             }
-            int rows = (list.Length + columns - 1) / columns;
-            y += rows * (rowHeight + gap);
+            y += (list.Length + columns - 1) / columns * (rowHeight + gap);
+        }
+
+        void AirframeList(ref float y, Rect r, float s, float rowHeight)
+        {
+            float gap = 4f * s;
+            int columns = rowHeight < 40f * s ? 2 : 1;
+            float w = (r.width - gap * (columns - 1)) / columns;
+            for (int i = 0; i < Airframe.StatCount; i++)
+            {
+                var stat = (AirframeStat)i;
+                int lv = _runner.Sandbox ? 0 : _runner.Progress.AirframeLevels[i];
+                int col = i % columns, row = i / columns;
+                var rect = new Rect(r.x + col * (w + gap), y + row * (rowHeight + gap), w, rowHeight);
+                if (GUI.Button(rect, Airframe.Names[i] + "   Lv " + lv + "/" + Airframe.MaxLevel, _stat == stat ? _buttonOn : _button)) _stat = stat;
+            }
+            y += (Airframe.StatCount + columns - 1) / columns * (rowHeight + gap) + 6f * s;
         }
 
         void LevelButtons(ref float y, Rect r, float s, Fitted fit)
         {
             float gap = 4f * s;
             float w = (r.width - gap * 4f) / 5f;
-            float h = 36f * s;
+            float h = 34f * s;
             var centred = new GUIStyle(_button) { alignment = TextAnchor.MiddleCenter };
             var centredOn = new GUIStyle(_buttonOn) { alignment = TextAnchor.MiddleCenter };
             for (int lv = 1; lv <= fit.Weapon.MaxLevel; lv++)
             {
                 var rect = new Rect(r.x + (lv - 1) * (w + gap), y, w, h);
                 if (GUI.Button(rect, "Lv " + lv, lv == fit.Level ? centredOn : centred) && lv != fit.Level)
-                    _runner.Fit(_slot, _side, fit.Weapon, lv);
+                    _runner.Fit(TabSlot, TabSide, fit.Weapon, lv);
             }
             y += h;
+        }
+
+        /// <summary>Five little boxes, filled up to the level.</summary>
+        void LevelPips(ref float y, Rect r, float s, int level, int max)
+        {
+            float gap = 4f * s, h = 10f * s;
+            float w = (r.width - gap * (max - 1)) / max;
+            for (int i = 0; i < max; i++)
+                DrawRect(new Rect(r.x + i * (w + gap), y, w, h), i < level ? Palette.HudAccent : Palette.HudBarBg);
+            y += h + 4f * s;
+        }
+
+        /// <summary>A shop button that's dimmed (and does nothing) when you can't afford it.</summary>
+        bool ShopButton(Rect rect, string text, bool enabled)
+        {
+            if (!enabled)
+            {
+                GUI.Label(rect, text, _buttonLocked);
+                return false;
+            }
+            return GUI.Button(rect, text, _bigButton);
         }
 
         void StageButtons(ref float y, Rect r, float s)
@@ -179,14 +361,13 @@ namespace Skyforge.Game
             var options = new[] { (Stages.FirstLight, "1-1 First Light"), (Stages.ArmadaSampler, "Armada Sampler"), ((StageDef)null, "Practice") };
             float gap = 4f * s;
             float w = (r.width - gap * 2f) / 3f;
-            float h = 40f * s;
+            float h = 38f * s;
             var centred = new GUIStyle(_button) { alignment = TextAnchor.MiddleCenter };
             var centredOn = new GUIStyle(_buttonOn) { alignment = TextAnchor.MiddleCenter };
             for (int i = 0; i < options.Length; i++)
             {
                 var (stage, label) = options[i];
-                bool on = _runner.SelectedStage == stage;
-                if (GUI.Button(new Rect(r.x + i * (w + gap), y, w, h), label, on ? centredOn : centred))
+                if (GUI.Button(new Rect(r.x + i * (w + gap), y, w, h), label, _runner.SelectedStage == stage ? centredOn : centred))
                     _runner.SelectedStage = stage;
             }
             y += h;

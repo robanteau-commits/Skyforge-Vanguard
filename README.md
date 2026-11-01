@@ -6,13 +6,25 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M2, weapons and the hangar (v0.4.0)
+- **Status:** milestone M3, the full loop: shop, upgrades, medals, saves and the world map (v0.5.0)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
 2. Unity Hub → **Projects** → **Add** → **Add project from disk** → choose
    `D:\Games\SkyforgeVanguard`. The first open takes a few minutes while Unity builds its cache.
 3. Open `Assets/Scenes/Main.unity` if it isn't already open, then press **Play**.
+
+## What's in M3 — the full loop
+- **World map** (the game starts here): World 1's six stages along a path over the turning Earth,
+  each showing its three medals. Clear a stage to unlock the next; 1-2 to the boss arrive in M4.
+- **Shop in the hangar:** buy wing weapons and cores with credits, upgrade them to level 5, and
+  fit them. The **Airframe** tab upgrades Hull, Shield, Shield regen, Thrusters, Magnet and
+  Capacitor (5 levels each, 250 → 2,400 credits).
+- **Results:** score, credits (half kept on a failed run), the three medals (Ace, Untouched,
+  Purge) with their one-time bonus, total credits, new best, unlocks. CONTINUE goes to the map.
+- **Saves** automatically after every stage. **Sandbox** on the map makes everything free for
+  testing and saves nothing; **Reset progress** (click twice) starts over.
+- Enemy credits are ~3× M2's and the magnet reaches 4 cells, so a good 1-1 run banks ~600.
 
 ## What's in M2 — weapons and the hangar
 - **The hangar** (the game starts here): fit any of the 8 wing weapons to each wing and any of
@@ -51,7 +63,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 | M0 | Project scaffold, ship flying, Pulse Repeater | **done** |
 | M1 | Enemies that shoot back, damage, shield and hull, stage timeline, stage 1-1 | **done** |
 | M2 | All 8 wing weapons, the 4 core specials, hangar loadout screen | **done** |
-| M3 | Credits, shop, upgrades, results, medals, saves, world map | next |
+| M3 | Credits, shop, upgrades, results, medals, saves, world map | **done** |
 | M4 | Stages 1-2 to 1-5, the Tidebreaker boss, Veteran mode | |
 | M5 | Audio, polish, settings, touch, mobile and web builds | |
 

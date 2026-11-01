@@ -15,7 +15,7 @@ namespace Skyforge.Game
 
         GameRunner _runner;
         GUIStyle _title, _label, _value, _combo, _small, _centre, _hint, _resultLine, _resultValue, _gold;
-        GUIStyle _button, _buttonOn, _bigButton, _body, _heading;
+        GUIStyle _button, _buttonOn, _buttonView, _buttonLocked, _buttonDanger, _bigButton, _body, _heading;
         float _styleScale = -1f;
         float _fps, _fpsTimer;
         int _fpsFrames;
@@ -61,6 +61,9 @@ namespace Skyforge.Game
             _heading = S(22, Palette.HudText, FontStyle.Bold);
             _button = ButtonStyle(15, scale, new Color(0.09f, 0.11f, 0.15f), new Color(0.14f, 0.17f, 0.23f), Palette.HudText);
             _buttonOn = ButtonStyle(15, scale, new Color(0.07f, 0.3f, 0.38f), new Color(0.09f, 0.36f, 0.45f), Color.white);
+            _buttonView = ButtonStyle(15, scale, new Color(0.12f, 0.17f, 0.24f), new Color(0.16f, 0.22f, 0.3f), Color.white);
+            _buttonLocked = ButtonStyle(15, scale, new Color(0.06f, 0.07f, 0.09f), new Color(0.08f, 0.09f, 0.12f), Palette.HudDim);
+            _buttonDanger = ButtonStyle(15, scale, new Color(0.4f, 0.09f, 0.08f), new Color(0.52f, 0.12f, 0.1f), Color.white);
             _bigButton = ButtonStyle(22, scale, new Color(0.1f, 0.55f, 0.68f), new Color(0.15f, 0.65f, 0.8f), Color.white);
             _bigButton.fontStyle = FontStyle.Bold;
             _bigButton.alignment = TextAnchor.MiddleCenter;
@@ -105,6 +108,11 @@ namespace Skyforge.Game
 
             float sideW = field.x;
             bool panels = sideW >= 170f * scale;
+            if (_runner.InMap)
+            {
+                Map(field, scale, panels);
+                return;
+            }
             if (_runner.InHangar)
             {
                 Hangar(field, scale, panels);
@@ -171,7 +179,7 @@ namespace Skyforge.Game
             Line(ref y, r, "Core  " + (sim.Loadout.Core.IsEmpty ? "—" : Describe(sim.Loadout.Core)), _small, 22f * s);
 
             var foot = new Rect(r.x, r.yMax - 44f * s, r.width, 44f * s);
-            GUI.Label(foot, "v" + Application.version + " · M2\n" + Mathf.RoundToInt(_fps) + " fps", _small);
+            GUI.Label(foot, "v" + Application.version + " · M3\n" + Mathf.RoundToInt(_fps) + " fps", _small);
         }
 
         void RightPanel(Rect r, float s)
@@ -240,15 +248,45 @@ namespace Skyforge.Game
             ResultRow(ref y, x, w, s, "Score", sim.Score.ToString("N0"));
             ResultRow(ref y, x, w, s, "Enemies destroyed", sim.Spawned > 0 ? sim.KillPercent + "%" : sim.Kills.ToString());
             ResultRow(ref y, x, w, s, "Hull damage", sim.HullDamageTaken <= 0f ? "none" : Mathf.CeilToInt(sim.HullDamageTaken).ToString());
+            var res = _runner.LastResult;
             ResultRow(ref y, x, w, s, cleared ? "Credits" : "Credits kept (half)", sim.CreditsBanked.ToString("N0"));
-            y += 24f * s;
+            if (res != null)
+            {
+                if (cleared && sim.Stage != null)
+                {
+                    MedalResult(ref y, x, w, s, "Ace", res.Ace, res.NewAce, sim.Stage.MedalBonus[0]);
+                    MedalResult(ref y, x, w, s, "Untouched", res.Untouched, res.NewUntouched, sim.Stage.MedalBonus[1]);
+                    MedalResult(ref y, x, w, s, "Purge", res.Purge, res.NewPurge, sim.Stage.MedalBonus[2]);
+                }
+                ResultRow(ref y, x, w, s, "Total credits", res.TotalCredits.ToString("N0"));
+                string news = (res.NewBest ? "New best score! " : "") + (res.UnlockedStageId != null ? "Stage " + res.UnlockedStageId + " unlocked." : "");
+                if (news.Length > 0) { GUI.Label(new Rect(field.x, y, field.width, 26f * s), news, new GUIStyle(_hint) { normal = { textColor = Palette.HudGold } }); y += 26f * s; }
+            }
+            else if (_runner.Sandbox || sim.Stage == null || sim.Stage == Stages.ArmadaSampler)
+            {
+                GUI.Label(new Rect(field.x, y, field.width, 26f * s), "Test flight: nothing is saved.", _hint);
+                y += 26f * s;
+            }
+            y += 18f * s;
 
-            float bw = (w - 10f * s) * 0.5f;
-            if (GUI.Button(new Rect(x, y, bw, 48f * s), "FLY AGAIN", _bigButton)) _runner.Launch();
-            if (GUI.Button(new Rect(x + bw + 10f * s, y, bw, 48f * s), "HANGAR", _bigButton)) _runner.OpenHangar();
-            y += 56f * s;
+            float bh = 48f * s, gap = 10f * s;
+            if (GUI.Button(new Rect(x, y, w, bh), "CONTINUE", _bigButton)) _runner.OpenMap();
+            y += bh + gap;
+            float bw = (w - gap) * 0.5f;
+            if (GUI.Button(new Rect(x, y, bw, 40f * s), "FLY AGAIN", _buttonOn)) _runner.Launch();
+            if (GUI.Button(new Rect(x + bw + gap, y, bw, 40f * s), "HANGAR", _buttonOn)) _runner.OpenHangar();
+            y += 48f * s;
             if (!_runner.Controls.UsingTouch)
-                GUI.Label(new Rect(field.x, y, field.width, 30f * s), "R or Space: fly again · H: hangar", _hint);
+                GUI.Label(new Rect(field.x, y, field.width, 30f * s), "Enter: continue · R: fly again · H: hangar", _hint);
+        }
+
+        void MedalResult(ref float y, float x, float w, float s, string name, bool earned, bool isNew, int bonus)
+        {
+            string v = !earned ? "—" : isNew ? "NEW  +" + bonus + " cr" : "earned";
+            var r = new Rect(x, y, w, 30f * s);
+            GUI.Label(r, "Medal: " + name, _resultLine);
+            GUI.Label(r, v, earned ? new GUIStyle(_resultValue) { normal = { textColor = Palette.HudGold } } : _resultValue);
+            y += 32f * s;
         }
 
         void ResultRow(ref float y, float x, float w, float s, string label, string value)

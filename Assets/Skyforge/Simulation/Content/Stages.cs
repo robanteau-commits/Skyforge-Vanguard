@@ -30,13 +30,27 @@ namespace Skyforge.Simulation
         public bool Repair;
     }
 
-    /// <summary>A stage: its name and its spawn timeline, sorted by time.</summary>
+    /// <summary>A stage: its name, spawn timeline (sorted by time) and medal rules.</summary>
     public sealed class StageDef
     {
         public string Id;
         public string Name;
         public SpawnOrder[] Orders;
+        /// <summary>Score for the Ace medal.</summary>
+        public long AceScore = 20000;
+        /// <summary>One-time credit bonus for each medal: Ace, Untouched, Purge.</summary>
+        public int[] MedalBonus = { 250, 200, 150 };
         public float LastOrderTime => Orders.Length == 0 ? 0f : Orders[Orders.Length - 1].Time;
+    }
+
+    /// <summary>A stage's place on the world map.</summary>
+    public sealed class WorldStage
+    {
+        public string Id;
+        public string Name;
+        public string Blurb;
+        /// <summary>The playable stage, or null if it isn't built yet.</summary>
+        public StageDef Def;
     }
 
     /// <summary>Writes stage timelines in readable steps: <c>b.Gnats(6f, GnatPath.SweepRight, 6, y: 12f)</c>.</summary>
@@ -98,6 +112,20 @@ namespace Skyforge.Simulation
         public static readonly StageDef FirstLight = BuildFirstLight();
         public static readonly StageDef ArmadaSampler = BuildSampler();
 
+        /// <summary>Kill percentage for the Purge medal.</summary>
+        public const int PurgePercent = 90;
+
+        /// <summary>World 1 "Earthfall" in map order (docs/DESIGN.md §6). Stages without a timeline yet arrive in M4.</summary>
+        public static readonly WorldStage[] World1 =
+        {
+            new WorldStage { Id = "1-1", Name = "First Light", Def = FirstLight, Blurb = "Gnats and Needles; the first Warden." },
+            new WorldStage { Id = "1-2", Name = "Harbor Line", Blurb = "Bastion turrets on drifting asteroids." },
+            new WorldStage { Id = "1-3", Name = "Stormwall", Blurb = "Spine Mines and Ram Drones." },
+            new WorldStage { Id = "1-4", Name = "Foundry Ridge", Blurb = "Wardens and the first Brood Carrier." },
+            new WorldStage { Id = "1-5", Name = "Upper Air", Blurb = "Everything at once." },
+            new WorldStage { Id = "1-B", Name = "The Tidebreaker", Blurb = "Boss: the Armada's sea-fortress." },
+        };
+
         public static readonly StageDef[] All = { FirstLight, ArmadaSampler };
 
         public static StageDef ById(string id)
@@ -142,7 +170,10 @@ namespace Skyforge.Simulation
             b.Warden(124f, 0f);
             b.Gnats(131f, GnatPath.SweepRight, 6, y: 6f).Gnats(137f, GnatPath.SweepLeft, 6, y: 6f);
             b.Repair(140f, 0f);
-            return b.Build("1-1", "First Light");
+            var def = b.Build("1-1", "First Light");
+            def.AceScore = 18000;
+            def.MedalBonus = new[] { 250, 200, 150 };
+            return def;
         }
 
         /// <summary>A test stage that shows every enemy type in turn (not part of the campaign).</summary>

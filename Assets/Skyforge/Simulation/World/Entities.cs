@@ -21,7 +21,7 @@ namespace Skyforge.Simulation
         /// <summary>Seconds of invulnerability left after a hit.</summary>
         public float Invulnerable;
         /// <summary>Pickups inside this distance fly to the ship.</summary>
-        public float MagnetRange = 2.5f;
+        public float MagnetRange = 4f;
 
         /// <summary>Volleys each wing has fired (every Nth can be special: charged bolts, giant spears).</summary>
         public readonly int[] VolleyCount = new int[2];

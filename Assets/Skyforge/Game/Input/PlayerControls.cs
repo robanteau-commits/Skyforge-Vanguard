@@ -121,6 +121,9 @@ namespace Skyforge.Game
                    (pad != null && pad.startButton.wasPressedThisFrame);
         }
 
+        /// <summary>M: back to the world map.</summary>
+        public static bool MapPressed() => Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame;
+
         /// <summary>H: back to the hangar.</summary>
         public static bool HangarPressed() => Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame;
 

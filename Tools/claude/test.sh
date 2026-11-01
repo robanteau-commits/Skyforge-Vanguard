@@ -47,7 +47,7 @@ if [ $# -ge 1 ]; then
   sed "s/NAMES/$1/g" "$HERE/one_bg.cs" > "$TMP"
   cmd eval_file --file "$TMP" >/dev/null; poll
 else
-  for c in SimulationTests StageTests WeaponTests FieldTests LevelTests; do
+  for c in SimulationTests StageTests WeaponTests FieldTests LevelTests ProgressTests; do
     sed "s/CLASSNAME/$c/g" "$HERE/runtests_bg.cs" > "$TMP"
     cmd eval_file --file "$TMP" >/dev/null; poll
   done
