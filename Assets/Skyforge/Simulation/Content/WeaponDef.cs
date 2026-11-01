@@ -63,6 +63,24 @@ namespace Skyforge.Simulation
         /// <summary>Wingmates: share of your wing weapons' damage each drone deals.</summary>
         public float Factor;
 
+        // Level-specific extras (docs/DESIGN.md §4.2, "what each level adds").
+        /// <summary>Degrees between neighbouring streams (Pulse Repeater at level 4+ fans its outer streams).</summary>
+        public float AngleStep;
+        /// <summary>Every Nth volley is special (Pulse: a charged bolt; Lance: a giant spear). 0 = never.</summary>
+        public int SpecialEvery;
+        /// <summary>Damage multiplier and size multiplier for that special shot.</summary>
+        public float SpecialDamage, SpecialSize;
+        /// <summary>Scatter: shards each pellet bursts into at the end of its range. Seeker: bomblets per blast.</summary>
+        public int Burst;
+        /// <summary>Sunline: the beam carries on through the first enemy into the next (at half damage).</summary>
+        public bool PassThrough;
+        /// <summary>Sunline: damage of the pulse released every half second at full power (0 = none), and its radius.</summary>
+        public float PulseDamage, PulseRadius;
+        /// <summary>Arc Coil: targets each strike branches to (1 = a single chain, 2 = forks).</summary>
+        public int Fork = 1;
+        /// <summary>Ricochet: discs split in two on their last hit.</summary>
+        public bool Split;
+
         /// <summary>Single-target damage per second if every projectile hits (wing guns).</summary>
         public float Dps => Count * ShotsPerSecond * Damage;
     }

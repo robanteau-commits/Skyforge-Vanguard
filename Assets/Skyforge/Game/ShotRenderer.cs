@@ -165,6 +165,20 @@ namespace Skyforge.Game
                     case ShotVisual.Pellet:
                         _pellet.Add(Matrix4x4.TRS(pos, along, Vector3.one));
                         break;
+                    case ShotVisual.Shrapnel:
+                        _pellet.Add(Matrix4x4.TRS(pos, along, Vector3.one * 0.55f));
+                        break;
+                    case ShotVisual.ChargedBolt:
+                    {
+                        // A fat, pulsing bolt: the pulse look at double size.
+                        float throb = 2.2f + 0.25f * Mathf.Sin(time * 40f);
+                        _pulse.Add(Matrix4x4.TRS(pos, along, new Vector3(throb, throb, 1.8f)));
+                        Emit(_pulseDots, pos - dir.normalized * 0.9f, dt, 40f, 0.18f, 0.12f, Vector3.zero);
+                        break;
+                    }
+                    case ShotVisual.Bomblet:
+                        _plume.Add(Matrix4x4.TRS(pos + Vector3.forward * 0.4f, Quaternion.identity, Vector3.one * 0.5f)); // the plume mesh sits 0.8 behind its origin
+                        break;
                     case ShotVisual.LanceBolt:
                         _lance.Add(Matrix4x4.TRS(pos, along, Vector3.one * (s.Radius / 0.22f)));
                         break;
@@ -182,7 +196,7 @@ namespace Skyforge.Game
                         Emit(_hornetDots, pos, dt, 60f, 0.25f, 0.09f, Vector3.zero);
                         break;
                     case ShotVisual.Disc:
-                        _disc.Add(Matrix4x4.TRS(pos, Quaternion.Euler(0f, time * 900f, 0f), Vector3.one));
+                        _disc.Add(Matrix4x4.TRS(pos, Quaternion.Euler(0f, time * 900f, 0f), Vector3.one * (s.Radius / 0.35f)));
                         break;
                     default: // PulseBolt
                         _pulse.Add(Matrix4x4.TRS(pos, along, Vector3.one));

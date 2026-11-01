@@ -108,9 +108,9 @@ namespace Skyforge.Simulation.Tests
 
         [TestCase(1, 1)]
         [TestCase(2, 2)]
-        [TestCase(3, 2)]
-        [TestCase(4, 3)]
-        [TestCase(5, 3)]
+        [TestCase(3, 3)]
+        [TestCase(4, 4)]
+        [TestCase(5, 5)]
         public void PulseRepeaterStreamsPerLevel(int level, int streams)
         {
             var loadout = new Loadout { LeftWing = new Fitted(Weapons.PulseRepeater, level) };

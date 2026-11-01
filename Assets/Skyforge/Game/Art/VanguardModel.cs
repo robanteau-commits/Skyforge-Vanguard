@@ -265,23 +265,31 @@ namespace Skyforge.Game
             }
         }
 
-        /// <summary>Lance Driver: a long rail gun, two rails with a glowing channel between them.</summary>
+        /// <summary>Lance Driver: a long rail gun; one glowing channel per spear (two rails each), thicker at level 2.</summary>
         static void LancePod(MeshBuilder b, int level)
         {
-            PodBody(b, 0.12f);
-            float w = 0.06f + 0.01f * level;
-            for (int s = -1; s <= 1; s += 2)
-                b.Box(new Vector3(s * w, 0f, 0.3f), new Vector3(0.035f, 0.07f, 0.65f), PLight);
-            b.Box(new Vector3(0f, 0f, 0.3f), new Vector3(w, 0.02f, 0.6f), PGlow);
+            PodBody(b, 0.12f + 0.02f * (level >= 3 ? 1 : 0));
+            int spears = Simulation.Weapons.LanceDriver.At(level).Count;
+            float gap = 0.13f;
+            float channel = level == 2 ? 0.07f : 0.04f;
+            for (int i = 0; i < spears; i++)
+            {
+                float x = (i - (spears - 1) * 0.5f) * gap;
+                b.Box(new Vector3(x - channel, 0f, 0.3f), new Vector3(0.03f, 0.07f, 0.65f), PLight);
+                b.Box(new Vector3(x + channel, 0f, 0.3f), new Vector3(0.03f, 0.07f, 0.65f), PLight);
+                b.Box(new Vector3(x, 0f, 0.3f), new Vector3(channel * 1.4f, 0.02f, 0.6f), PGlow);
+            }
         }
 
-        /// <summary>Sunline Beam: a lens emitter framed at the front; the lens grows with the level.</summary>
+        /// <summary>Sunline Beam: one lens emitter per strand in a frame at the front.</summary>
         static void SunlinePod(MeshBuilder b, int level)
         {
             PodBody(b, 0.14f);
-            float r = 0.07f + 0.012f * level;
-            b.Box(new Vector3(0f, 0f, 0.48f), new Vector3(r * 3.2f, r * 3.2f, 0.05f), PLight);
-            b.Octahedron(new Vector3(0f, 0f, 0.55f), new Vector3(r, r, r * 1.3f), PGlow);
+            int strands = Simulation.Weapons.SunlineBeam.At(level).Count;
+            float r = level == 2 || level >= 4 ? 0.08f : 0.065f;
+            b.Box(new Vector3(0f, 0f, 0.48f), new Vector3(0.12f + 0.12f * strands, r * 3f, 0.05f), PLight);
+            for (int i = 0; i < strands; i++)
+                b.Octahedron(new Vector3((i - (strands - 1) * 0.5f) * 0.12f, 0f, 0.55f), new Vector3(r, r, r * 1.3f), PGlow);
         }
 
         /// <summary>Seeker Pods: a boxy launcher with one tube per missile.</summary>

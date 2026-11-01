@@ -23,11 +23,20 @@ namespace Skyforge.Simulation
         /// <summary>Pickups inside this distance fly to the ship.</summary>
         public float MagnetRange = 2.5f;
 
-        // Sunline Beam, per wing (index 0 = left, 1 = right).
+        /// <summary>Volleys each wing has fired (every Nth can be special: charged bolts, giant spears).</summary>
+        public readonly int[] VolleyCount = new int[2];
+
+        // Sunline Beam, per wing (index 0 = left, 1 = right), with up to 3 strands each.
+        public const int MaxStrands = 3;
         /// <summary>The beam is firing from this wing.</summary>
         public readonly bool[] BeamOn = new bool[2];
-        /// <summary>Where the beam ends (field Y): the enemy it's burning, or past the top of the screen.</summary>
-        public readonly float[] BeamEndY = new float[2];
+        /// <summary>Strands this wing's beam has (its level).</summary>
+        public readonly int[] BeamStrands = new int[2];
+        /// <summary>Strand <c>wing * MaxStrands + i</c>: its X offset from the muzzle and where it ends (field Y).</summary>
+        public readonly float[] BeamStrandX = new float[2 * MaxStrands];
+        public readonly float[] BeamEndY = new float[2 * MaxStrands];
+        /// <summary>Seconds until the next full-power pulse (level 5).</summary>
+        public readonly float[] BeamPulseTimer = new float[2];
         /// <summary>Enemy the beam is on (0 = none) and how long it's been on it (the damage ramps up).</summary>
         public readonly int[] BeamTarget = new int[2];
         public readonly float[] BeamTime = new float[2];
@@ -63,7 +72,7 @@ namespace Skyforge.Simulation
         public static Vec2 PodOffset(Side side) => new Vec2(side == Side.Left ? -1.0f : 1.0f, 0.6f);
     }
 
-    public enum ShotVisual : byte { PulseBolt, Pellet, LanceBolt, Missile, MicroMissile, Disc }
+    public enum ShotVisual : byte { PulseBolt, Pellet, LanceBolt, Missile, MicroMissile, Disc, ChargedBolt, Shrapnel, Bomblet }
 
     /// <summary>A projectile fired by the player (or a wingmate).</summary>
     public struct Shot
@@ -89,6 +98,12 @@ namespace Skyforge.Simulation
         public int TargetId;
         /// <summary>Bounces off the sides of the screen.</summary>
         public bool Bounce;
+        /// <summary>Scatter pellets: shards released when it reaches the end of its range. Seekers: bomblets per blast.</summary>
+        public int Burst;
+        /// <summary>Bomblets: explode (with <see cref="Blast"/>) when their life runs out.</summary>
+        public bool BlastOnExpire;
+        /// <summary>Discs: split in two on their last hit.</summary>
+        public bool Split;
     }
 
     public enum EnemyShotVisual : byte
@@ -202,6 +217,10 @@ namespace Skyforge.Simulation
         CoreEnded,
         /// <summary>The Aegis Field absorbed a hit.</summary>
         AegisBlock,
+        /// <summary>A Sunline Beam at full power pulsed (Pos = where, Value = radius).</summary>
+        BeamPulse,
+        /// <summary>A small blast went off (Pos = where, Value = radius): missiles, bomblets.</summary>
+        Blast,
     }
 
     /// <summary>Something that happened this step, for effects and sound. Gameplay never reads these.</summary>

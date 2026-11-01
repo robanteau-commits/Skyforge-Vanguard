@@ -68,7 +68,7 @@ namespace Skyforge.Game
                 Line(ref y, r, "LEVEL", _label, 22f * s);
                 LevelButtons(ref y, r, s, fit);
                 y += 8f * s;
-                Line(ref y, r, StatsText(fit.Weapon, fit.Level), _body, 96f * s);
+                Line(ref y, r, StatsText(fit.Weapon, fit.Level), _body, 120f * s);
                 if (_slot == WeaponSlot.Wing)
                 {
                     if (GUI.Button(new Rect(r.x, y, r.width, 34f * s), "Fit the same to the " + (_side == Side.Left ? "right" : "left") + " wing", _button))
@@ -199,21 +199,29 @@ namespace Skyforge.Game
             switch (w.Kind)
             {
                 case WeaponKind.PulseRepeater:
-                    return $"{st.Count} stream{(st.Count > 1 ? "s" : "")}, {st.ShotsPerSecond:0.#} shots/s\n{st.Damage:0.##} damage per bolt · {st.Dps:0} per second";
+                    return $"{st.Count} stream{(st.Count > 1 ? "s" : "")}, {st.ShotsPerSecond:0.#} volleys/s · {st.Dps:0} damage/s" +
+                           (st.SpecialEvery > 0 ? $"\nLv 5: a charged, piercing bolt every {st.SpecialEvery}th volley" : st.AngleStep > 0f ? "\nOuter streams fan out" : "");
                 case WeaponKind.ScatterCannon:
-                    return $"{st.Count} pellets over {st.Spread:0}°, {st.ShotsPerSecond:0.#} volleys/s\n{st.Damage:0.##} damage per pellet · short range";
+                    return $"{st.Count} pellets over {st.Spread:0}°, {st.ShotsPerSecond:0.#} volleys/s\n{st.Damage:0.##} damage per pellet · short range" +
+                           (st.Burst > 0 ? $"\nLv 5: pellets burst into {st.Burst} shards" : "");
                 case WeaponKind.LanceDriver:
-                    return $"{st.ShotsPerSecond:0.##} bolts/s, {st.Damage:0.#} damage each\nPierces every enemy in its path";
+                    return $"{st.Count} spear{(st.Count > 1 ? "s" : "")}, {st.ShotsPerSecond:0.##} volleys/s, {st.Damage:0.#} damage each\nPierces every enemy in its path" +
+                           (st.SpecialEvery > 0 ? $"\nLv 5: every {st.SpecialEvery}rd volley fires a giant spear" : "");
                 case WeaponKind.SunlineBeam:
-                    return $"{st.Damage:0} → {st.DamageMax:0} damage per second\nRamps up over {st.RampTime:0.#} s on one target";
+                    return $"{st.Count} strand{(st.Count > 1 ? "s" : "")}, {st.Damage:0} → {st.DamageMax:0} damage/s over {st.RampTime:0.#} s" +
+                           (st.PassThrough ? "\nBurns through to a second enemy" : "") + (st.PulseDamage > 0f ? "\nLv 5: pulses at full power" : "");
                 case WeaponKind.SeekerPods:
-                    return $"{st.Count} missile{(st.Count > 1 ? "s" : "")} every {1f / st.ShotsPerSecond:0.##} s, {st.Damage:0.#} damage\nBlast radius {st.Blast:0.#}";
+                    return $"{st.Count} missile{(st.Count > 1 ? "s" : "")} every {1f / st.ShotsPerSecond:0.##} s, {st.Damage:0.#} damage\nBlast radius {st.Blast:0.#}" +
+                           (st.Burst > 0 ? $"\nLv 5: each blast scatters {st.Burst} bomblets" : "");
                 case WeaponKind.HornetRack:
-                    return $"{st.Count} micro-missiles every {1f / st.ShotsPerSecond:0.##} s\n{st.Damage:0.##} damage each, spread over targets";
+                    return $"{st.Count} micro-missiles every {1f / st.ShotsPerSecond:0.##} s\n{st.Damage:0.##} damage each, spread over targets" +
+                           (st.Life > 3f ? "\nLv 5: darts that miss circle back" : "");
                 case WeaponKind.ArcCoil:
-                    return $"{st.ShotsPerSecond:0.##} strikes/s, {st.Damage:0.#} damage\nJumps to {st.Jumps} more · reach {st.Range:0.#}";
+                    return $"{st.ShotsPerSecond:0.##} strikes/s, {st.Damage:0.#} damage\nJumps to {st.Jumps} more · reach {st.Range:0.#}" +
+                           (st.Fork > 1 ? "\nLv 5: every strike forks to two targets" : "");
                 case WeaponKind.RicochetDisc:
-                    return $"{st.Count} disc{(st.Count > 1 ? "s" : "")} every {1f / st.ShotsPerSecond:0.##} s, {st.Damage:0.#} damage\nUp to {st.MaxHits} hits each, bounces off the sides";
+                    return $"{st.Count} disc{(st.Count > 1 ? "s" : "")} every {1f / st.ShotsPerSecond:0.##} s, {st.Damage:0.#} damage\nUp to {st.MaxHits} hits each, bounces off the sides" +
+                           (st.Split ? "\nLv 5: discs split in two on their last hit" : "");
                 case WeaponKind.PulseNova:
                     return $"Clears every bullet on screen\n{st.Damage:0} damage to every enemy in view";
                 case WeaponKind.SolarLance:

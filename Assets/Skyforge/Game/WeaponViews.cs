@@ -114,19 +114,24 @@ namespace Skyforge.Game
             var ship = new Vector3(shipPos.X, PlayY, shipPos.Y);
             float pulse = 1f + 0.12f * Mathf.Sin(time * 30f);
 
-            // Sunline Beam, per wing.
+            // Sunline Beam: each wing's strands (one per level step).
             for (int i = 0; i < 2; i++)
             {
                 if (!p.BeamOn[i] || !p.Alive) continue;
                 var wing = sim.Loadout.Wing(i == 0 ? Side.Left : Side.Right);
                 if (wing.IsEmpty) continue;
                 var muzzle = shipPos + PlayerShip.PodOffset(i == 0 ? Side.Left : Side.Right);
-                var a = new Vector3(muzzle.X, PlayY, muzzle.Y);
-                var b = new Vector3(muzzle.X, PlayY, Mathf.Max(muzzle.Y + 0.1f, p.BeamEndY[i]));
                 float w = wing.Stats.Width;
                 // Thicker and brighter-cored as the damage ramps up on a target.
                 float ramp = wing.Stats.RampTime > 0f ? Mathf.Clamp01(p.BeamTime[i] / wing.Stats.RampTime) : 0f;
-                Beam(a, b, w * (1f + 0.3f * ramp), pulse, time + i * 0.37f, p.BeamTarget[i] != 0);
+                for (int k = 0; k < p.BeamStrands[i]; k++)
+                {
+                    int idx = i * PlayerShip.MaxStrands + k;
+                    float x = muzzle.X + p.BeamStrandX[idx];
+                    var a = new Vector3(x, PlayY, muzzle.Y);
+                    var b = new Vector3(x, PlayY, Mathf.Max(muzzle.Y + 0.1f, p.BeamEndY[idx]));
+                    Beam(a, b, w * (1f + 0.3f * ramp), pulse, time + i * 0.37f + k * 0.21f, p.BeamEndY[idx] < Field.HalfHeight);
+                }
             }
 
             // Solar Lance: a wide beam from the ship to past the top of the screen.

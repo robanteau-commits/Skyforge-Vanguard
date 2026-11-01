@@ -125,6 +125,25 @@ Airframe upgrade costs (each stat): **250 / 500 / 900 / 1500 / 2400** credits. *
 | 7 | **Arc Coil** | Exotic: chain lightning | Strikes the nearest enemy within 9 u and jumps to others. | 3/s × 6, 2 jumps | 4/s × 9, 5 jumps, range 11 | 1300 | Clusters / short range |
 | 8 | **Ricochet Disc** | Exotic: bouncing | Spinning discs that bounce off the sides of the screen and through enemies, each hitting at most 4 times. | 1 disc / 0.8 s × 8 | 2 discs / 0.6 s × 12, 6 hits | 1000 | Crowded screens / skill to aim |
 
+### 4.2a What each level adds (Rob's call, v0.4.0)
+
+Every level adds one thing you can see, mostly one more projectile; level 5 adds a twist. Damage per
+projectile drops a little as the count rises, so total damage still grows about 2.3x from level 1
+to 5 (Scatter, Arc and Ricochet grow more, because they need several targets to pay off).
+
+| Weapon | Lv 1 | Lv 2 | Lv 3 | Lv 4 | Lv 5 (twist) |
+|---|---|---|---|---|---|
+| Pulse Repeater | 1 stream | 2 streams | 3 streams | 4, outer ones fan out | 5 + a charged piercing bolt every 5th volley |
+| Scatter Cannon | 3 pellets | 4 | 5 | 6 | 7 + pellets burst into 4 shards at the end of their range |
+| Lance Driver | 1 spear | 1 thicker spear | 2 spears | 3 spears | 3 + every 3rd volley a giant spear (3x wide, 2.5x damage) |
+| Sunline Beam | 1 thin beam | 1 wider beam | 2 strands | 2 strands that burn through to a second enemy | 3 strands + a pulse every 0.5 s at full power |
+| Seeker Pods | 1 missile | 2 | 3 | 4 | 5 + each blast scatters 3 bomblets |
+| Hornet Rack | 4 darts | 5 | 6 | 7 | 8 + darts live longer and turn harder, circling back when they miss |
+| Arc Coil | strike + 1 jump | 2 jumps | 3 | 4 | 5 + every strike forks to 2 targets (max 12 strikes) |
+| Ricochet Disc | 1 disc | 2 | 3 | 4 | 5 + discs split into two small ones on their last hit |
+
+Each weapon's pod shows its level too (one barrel, tube, rail or lens per projectile).
+
 Reserved for a later update (not in v1): **Flak Burster** (shells that burst into shrapnel at a set
 distance) and **Plasma Orb** (a slow orb that eats enemy bullets).
 

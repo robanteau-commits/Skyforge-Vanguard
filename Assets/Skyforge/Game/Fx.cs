@@ -140,6 +140,21 @@ namespace Skyforge.Game
                                 Spawn(_muzzle, ToWorld(e.Pos), RandomDir(4f, 9f), 0.35f, 0.12f, 0, 3f);
                         }
                         break;
+                    case SimEventType.Blast:
+                        // Missile and bomblet blasts: a white-hot flash with cyan sparks.
+                        Spawn(_muzzle, ToWorld(e.Pos, 0.2f), Vector3.zero, 0.18f, e.Value * 1.1f, 1);
+                        for (int i = 0; i < 6; i++)
+                            Spawn(_ember, ToWorld(e.Pos), RandomDir(4f, 9f), 0.2f, 0.07f, 0, 3f);
+                        break;
+                    case SimEventType.BeamPulse:
+                        // A ring of cyan sparks the size of the pulse.
+                        for (int i = 0; i < 18; i++)
+                        {
+                            float a = i * Mathf.PI * 2f / 18f;
+                            var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                            Spawn(_muzzle, ToWorld(e.Pos) + dir * 0.3f, dir * e.Value * 5f, 0.2f, 0.12f, 0);
+                        }
+                        break;
                     case SimEventType.AegisBlock:
                         for (int i = 0; i < 6; i++)
                         {

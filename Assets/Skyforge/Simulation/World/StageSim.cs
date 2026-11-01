@@ -200,12 +200,18 @@ namespace Skyforge.Simulation
             h.Add(p.Pos); h.Add(p.LeftCooldown); h.Add(p.RightCooldown); h.Add(p.Alive ? 1 : 0);
             h.Add(p.Hull); h.Add(p.Shield); h.Add(p.ShieldRegenWait); h.Add(p.Invulnerable);
             h.Add(p.CoreCharge); h.Add(p.CoreActive ? 1 : 0); h.Add(p.CoreTimer); h.Add(p.WingmateCount);
-            for (int i = 0; i < 2; i++) { h.Add(p.BeamOn[i] ? 1 : 0); h.Add(p.BeamEndY[i]); h.Add(p.BeamTarget[i]); h.Add(p.BeamTime[i]); }
+            for (int i = 0; i < 2; i++)
+            {
+                h.Add(p.BeamOn[i] ? 1 : 0); h.Add(p.BeamStrands[i]); h.Add(p.BeamTarget[i]); h.Add(p.BeamTime[i]);
+                h.Add(p.BeamPulseTimer[i]); h.Add(p.VolleyCount[i]);
+            }
+            foreach (var y in p.BeamEndY) h.Add(y);
             foreach (var c in p.WingmateCooldown) h.Add(c);
             h.Add(Shots.Count);
             foreach (var s in Shots)
             {
                 h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); h.Add(s.Life); h.Add(s.HitsLeft); h.Add(s.LastHit); h.Add(s.TargetId);
+                h.Add(s.Burst); h.Add(s.BlastOnExpire ? 1 : 0); h.Add(s.Split ? 1 : 0);
             }
             h.Add(EnemyShots.Count);
             foreach (var s in EnemyShots) { h.Add(s.Pos); h.Add(s.Vel); h.Add(s.Damage); }

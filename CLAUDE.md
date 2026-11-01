@@ -57,8 +57,8 @@ stages, enemies or art.
   `Mats` + `Palette` (the dark sci-fi colours). Blender sources live in `Art/Blender/`.
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
 - `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
-  `StageTests` (enemies, damage, combo, pickups, stage flow) and `WeaponTests` (every wing weapon
-  and core).
+  `StageTests` (enemies, damage, combo, pickups, stage flow), `WeaponTests` (every wing weapon
+  and core), `LevelTests` (what each weapon level adds) and `FieldTests` (the wide PC field).
 
 ## Verifying changes
 - **From a cloud session (no Unity):** the simulation and its tests compile under plain .NET:
