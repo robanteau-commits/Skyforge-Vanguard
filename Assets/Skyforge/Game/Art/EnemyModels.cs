@@ -11,8 +11,19 @@ namespace Skyforge.Game
     {
         const int Hull = 0, Plate = 1, Glow = 2;
 
+        /// <summary>Blender model name for an enemy kind: <c>enemy_</c> + the kind in camelCase
+        /// (e.g. <c>enemy_practiceDrone</c>).</summary>
+        public static string ModelName(EnemyKind kind)
+        {
+            string s = kind.ToString();
+            return "enemy_" + char.ToLowerInvariant(s[0]) + s.Substring(1);
+        }
+
+        /// <summary>The enemy's Blender model if there is one (docs/BLENDER.md), else the code-built one.</summary>
         public static GameObject Create(EnemyKind kind, Transform parent)
         {
+            var model = ModelLibrary.TryCreate(ModelName(kind), parent);
+            if (model != null) return model;
             var b = new MeshBuilder();
             switch (kind)
             {

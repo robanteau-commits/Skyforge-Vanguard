@@ -4,8 +4,9 @@ A low-poly 3D vertical shoot-'em-up for PC, web and mobile, built in Unity 6 (UR
 Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
+- **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M0, the test flight (v0.1.0)
+- **Status:** milestone M0, the test flight (v0.1.1)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
@@ -41,4 +42,6 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
   It reads the simulation and draws it with interpolation; it never changes it directly.
 - `Assets/Skyforge/Tests/EditMode` — NUnit tests for the simulation
   (Unity: Window → General → Test Runner → EditMode).
+- `Assets/Skyforge/Resources/Models` — Blender models (FBX) for ships and enemies; anything not
+  modelled yet uses a code-built stand-in. Blender sources are in `Art/Blender`.
 - `Assets/Settings` — URP render pipeline assets and post-processing (bloom, vignette, tonemapping).

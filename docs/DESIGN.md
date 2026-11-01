@@ -30,7 +30,7 @@ stage map. Every name, weapon, enemy, stage and piece of art in this game is ori
 | Difficulty | Casual-friendly Normal; Veteran unlocks after a world is cleared |
 | Scoring | Score with a combo multiplier, plus collectable credits and 3 medals per stage |
 | Setting | Near-future Earth → orbit → the invaders' world |
-| Art | Dark sci-fi, flat-shaded low poly, neon emissive accents with bloom; models generated in code |
+| Art | Dark sci-fi, flat-shaded low poly, neon emissive accents with bloom; models made in Blender (docs/BLENDER.md), with code-built fallbacks |
 | Audio | Sound effects generated in code, plus a synth soundtrack |
 | Online | None in v1 (offline only) |
 | Business | Premium: pay once, no ads, no in-app purchases |
@@ -268,8 +268,11 @@ port stays possible.
 ## 10. Art, audio, tech
 
 ### 10.1 Art direction — dark sci-fi low poly
-- Flat-shaded, faceted meshes **built in C# from primitives and extruded polygons** (no external
-  models). Each model is a small `*Model.cs` builder, so any shape can be changed by asking.
+- Flat-shaded, faceted meshes **made in Blender** (decided 2026-11-01, replacing the original
+  "built in code" plan). They're exported as FBX into `Assets/Skyforge/Resources/Models/`; the
+  brief, names, sizes and export settings are in **docs/BLENDER.md**. Each ship part keeps a
+  code-built fallback (`*Model.cs`) used until its Blender model exists. Terrain, bullets and
+  particles stay code-built.
 - **Palette:** gunmetal, slate and deep navy for ships and terrain; desaturated, darkened
   backgrounds so the action stands out. Emissive accents: **player cyan/white**, **enemy
   red/magenta**, **enemy bullets orange/pink**, **credits gold**, **repair orbs green**.

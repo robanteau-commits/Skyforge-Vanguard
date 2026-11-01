@@ -5,9 +5,12 @@ using R = Skyforge.Game.MeshBuilder.Ring;
 namespace Skyforge.Game
 {
     /// <summary>
-    /// The player's ship: a sleek delta-wing fighter, built from code in play-field units
-    /// (nose towards +Z, wingtips at X = ±1.6, a weapon pod under each wing at X = ±1.0).
-    /// The pods change with the fitted weapon and its level; the core crystal glows in the spine.
+    /// The player's ship: a sleek delta-wing fighter in play-field units (nose towards +Z,
+    /// wingtips at X = ±1.6, a weapon pod under each wing at X = ±1.0). The pods change with the
+    /// fitted weapon and its level; the core crystal glows in the spine.
+    /// Each part uses its Blender model when there is one (docs/BLENDER.md: <c>vanguard</c>,
+    /// <c>vanguard_core</c>, <c>vanguard_flame</c>, <c>pod_&lt;weaponId&gt;_lv&lt;N&gt;</c>) and
+    /// otherwise the code-built version below.
     /// </summary>
     public static class VanguardModel
     {
@@ -24,6 +27,11 @@ namespace Skyforge.Game
             public Transform LeftPod, RightPod;
         }
 
+        // Mount points on the body (docs/BLENDER.md): each part's model origin goes here.
+        public static readonly Vector3 CoreMount = new Vector3(0f, 0.27f, -0.35f);
+        public static readonly Vector3 FlameMountRight = new Vector3(0.2f, 0.02f, -1.5f);
+        public const float PodMountY = -0.13f;
+
         public static Parts Build(Transform parent, Loadout loadout)
         {
             var parts = new Parts { Root = new GameObject("Vanguard") };
@@ -32,28 +40,43 @@ namespace Skyforge.Game
             body.SetParent(parts.Root.transform, false);
             parts.Body = body;
 
-            var b = new MeshBuilder();
-            BuildFuselage(b);
-            BuildWing(b);
-            b.Push(MeshBuilder.MirrorX);
-            BuildWing(b);
-            b.Pop();
-            b.BuildObject("Airframe", body, Mats.Hull, Mats.HullLight, Mats.HullDark, Mats.Canopy, Mats.PlayerGlow);
+            if (ModelLibrary.TryCreate("vanguard", body) == null)
+            {
+                var b = new MeshBuilder();
+                BuildFuselage(b);
+                BuildWing(b);
+                b.Push(MeshBuilder.MirrorX);
+                BuildWing(b);
+                b.Pop();
+                b.BuildObject("Airframe", body, Mats.Hull, Mats.HullLight, Mats.HullDark, Mats.Canopy, Mats.PlayerGlow);
+            }
 
             // Core crystal, set into the spine behind the canopy.
-            var core = new MeshBuilder();
-            core.Octahedron(Vector3.zero, new Vector3(0.13f, 0.19f, 0.22f), 0);
-            parts.Core = core.BuildObject("Core", body, Mats.PlayerGlow).transform;
-            parts.Core.localPosition = new Vector3(0f, 0.27f, -0.35f);
+            var coreGo = ModelLibrary.TryCreate("vanguard_core", body);
+            if (coreGo == null)
+            {
+                var core = new MeshBuilder();
+                core.Octahedron(Vector3.zero, new Vector3(0.13f, 0.19f, 0.22f), 0);
+                coreGo = core.BuildObject("Core", body, Mats.PlayerGlow);
+            }
+            parts.Core = coreGo.transform;
+            parts.Core.localPosition = CoreMount;
 
-            // Engine flames: separate so they can flicker and stretch with speed.
+            // Engine flames: separate so they can flicker and stretch with speed (they scale along Z,
+            // so a flame model points backwards from its origin).
             parts.Flames = new Transform[2];
             for (int i = 0; i < 2; i++)
             {
-                var f = new MeshBuilder();
-                f.Octahedron(new Vector3(0f, 0f, -0.25f), new Vector3(0.09f, 0.09f, 0.3f), 0);
-                var t = f.BuildObject(i == 0 ? "FlameL" : "FlameR", body, Mats.PlayerGlow).transform;
-                t.localPosition = new Vector3(i == 0 ? -0.2f : 0.2f, 0.02f, -1.5f);
+                var flame = ModelLibrary.TryCreate("vanguard_flame", body);
+                if (flame == null)
+                {
+                    var f = new MeshBuilder();
+                    f.Octahedron(new Vector3(0f, 0f, -0.25f), new Vector3(0.09f, 0.09f, 0.3f), 0);
+                    flame = f.BuildObject("Flame", body, Mats.PlayerGlow);
+                }
+                flame.name = i == 0 ? "FlameL" : "FlameR";
+                var t = flame.transform;
+                t.localPosition = new Vector3(i == 0 ? -FlameMountRight.x : FlameMountRight.x, FlameMountRight.y, FlameMountRight.z);
                 parts.Flames[i] = t;
             }
 
@@ -149,6 +172,15 @@ namespace Skyforge.Game
         public static Transform BuildPod(Transform body, Side side, Fitted fitted)
         {
             float x = PlayerShip.PodOffset(side).X;
+            var model = fitted.IsEmpty ? null : PodModel(fitted, body);
+            if (model != null)
+            {
+                model.name = side == Side.Left ? "PodL" : "PodR";
+                model.transform.localPosition = new Vector3(x, PodMountY, 0f);
+                // A left pod is the right pod mirrored, so asymmetric pods stay outboard.
+                if (side == Side.Left) model.transform.localScale = new Vector3(-1f, 1f, 1f);
+                return model.transform;
+            }
             var b = new MeshBuilder();
             if (!fitted.IsEmpty)
             {
@@ -159,8 +191,20 @@ namespace Skyforge.Game
             }
             var go = b.BuildObject(side == Side.Left ? "PodL" : "PodR", body,
                 Mats.HullDark, Mats.HullLight, Mats.PlayerGlow);
-            go.transform.localPosition = new Vector3(x, -0.13f, 0f);
+            go.transform.localPosition = new Vector3(x, PodMountY, 0f);
             return go.transform;
+        }
+
+        /// <summary>The Blender pod for this weapon at this level: <c>pod_&lt;id&gt;_lv&lt;N&gt;</c>, else the
+        /// nearest lower level, else <c>pod_&lt;id&gt;</c>; null if there's none.</summary>
+        static GameObject PodModel(Fitted fitted, Transform body)
+        {
+            for (int lv = fitted.Level; lv >= 1; lv--)
+            {
+                var go = ModelLibrary.TryCreate("pod_" + fitted.Weapon.Id + "_lv" + lv, body);
+                if (go != null) return go;
+            }
+            return ModelLibrary.TryCreate("pod_" + fitted.Weapon.Id, body);
         }
 
         /// <summary>Pulse Repeater: a slim pod with one barrel per stream and glowing muzzles.</summary>
