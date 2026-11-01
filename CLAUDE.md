@@ -73,7 +73,9 @@ stages, enemies or art.
   buttons (their screen rects go to `PlayerControls.CoreButton` / `PauseButton`).
 - `Editor/ModelImportSettings.cs` — fixes the import settings of everything in the Models folder.
   `Editor/SkyforgeBuild.cs` — the **Skyforge → Build** menu (Windows, WebGL, Android APK / AAB) and
-  a pre-build hook that applies each platform's settings. `Installer/` — the Inno Setup script.
+  a pre-build hook that applies each platform's settings. `Installer/` — the Inno Setup script (`.exe`) and the WiX v5 source for the MSI
+  (`SkyforgeVanguard.wxs`, built by `build-msi.ps1`; WiX only runs on Windows, so it can't be
+  test-built in a cloud session).
   docs/BUILDING.md has Rob's click-by-click build steps.
 - `Tests/EditMode/` — NUnit tests: `SimulationTests` (movement, weapons, determinism),
   `StageTests` (enemies, damage, combo, pickups, stage flow), `WeaponTests` (every wing weapon

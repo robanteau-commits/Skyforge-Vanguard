@@ -33,4 +33,5 @@ if [ -n "$prev" ] && [ "$now" = "$prev" ]; then echo "No new player build ran (s
 
 if [ "$TARGET" = StandaloneWindows64 ]; then
   powershell.exe -ExecutionPolicy Bypass -File "D:\\Games\\SkyforgeVanguard\\Installer\\build-installer.ps1" || echo "(installer skipped)"
+  powershell.exe -ExecutionPolicy Bypass -File "D:\\Games\\SkyforgeVanguard\\Installer\\build-msi.ps1" || echo "(MSI skipped)"
 fi

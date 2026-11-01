@@ -27,6 +27,29 @@ For the Windows installer, also install Inno Setup once. In Command Prompt:
    ```
    It writes `Builds\Installer\SkyforgeVanguardSetup-<version>.exe`.
 
+### Or an MSI installer
+An `.msi` installs the same way (double-click it) and is what companies' IT tools and Windows'
+own deployment expect. It installs for all users into `Program Files\Skyforge Vanguard`, adds Start
+menu and desktop shortcuts, and a newer MSI upgrades an older one in place. It shows a simple
+progress window (no folder choice), and you uninstall it from **Settings → Apps**.
+
+One-time setup, in Command Prompt:
+```
+winget install Microsoft.DotNet.SDK.8
+```
+then close Command Prompt, open a new one, and run:
+```
+dotnet tool install --global wix --version 5.0.2
+```
+
+Each time, after **Skyforge → Build → Windows**:
+```
+cd /d D:\Games\SkyforgeVanguard
+powershell -ExecutionPolicy Bypass -File Installer\build-msi.ps1
+```
+It writes `Builds\Installer\SkyforgeVanguard-<version>.msi`. Use either the MSI or the Inno Setup
+`.exe` on a PC, not both: they're separate installers and would install two copies.
+
 ## Web (WebGL)
 1. **Skyforge → Build → Web (WebGL)**. The first web build takes several minutes.
 2. The game is the `Builds\Web` folder (`index.html` plus a `Build` folder). It won't run by
@@ -70,4 +93,4 @@ The Android package id is `com.robanteau.skyforgevanguard`, and the version code
 
 ## From a Claude session on Rob's PC
 `bash Tools/claude/build.sh [windows|web|android]` builds through the open Editor (Windows also
-makes the installer when Inno Setup is installed).
+makes the Inno Setup installer and the MSI when their tools are installed).
