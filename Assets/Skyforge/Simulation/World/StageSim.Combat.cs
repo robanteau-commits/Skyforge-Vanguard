@@ -76,7 +76,7 @@ namespace Skyforge.Simulation
                 var s = EnemyShots[i];
                 float slow = AegisUp && Vec2.DistanceSq(s.Pos, Player.Pos) < CoreStats.Range * CoreStats.Range ? CoreStats.Factor : 1f;
                 s.Pos += s.Vel * (Field.Dt * slow);
-                if (Field.IsOutside(s.Pos, 1f)) continue;
+                if (Outside(s.Pos, 1f)) continue;
                 if (Player.Alive && (Player.Invulnerable <= 0f || AegisUp))
                 {
                     float r = s.Radius + PlayerShip.HitRadius;
@@ -205,7 +205,7 @@ namespace Skyforge.Simulation
                     k.Vel = k.Vel + (drift - k.Vel) * Math.Min(1f, 2f * Field.Dt);
                 }
                 k.Pos += k.Vel * Field.Dt;
-                if (k.Pos.Y < -Field.HalfHeight - 1f || Field.IsOutside(k.Pos, 2f)) continue; // missed
+                if (k.Pos.Y < -Field.HalfHeight - 1f || Outside(k.Pos, 2f)) continue; // missed
                 Pickups[write++] = k;
             }
             Pickups.RemoveRange(write, Pickups.Count - write);

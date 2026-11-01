@@ -20,10 +20,15 @@ namespace Skyforge.Simulation
                 var o = orders[_nextOrder++];
                 if (o.Repair)
                 {
-                    AddPickup(PickupKind.Repair, new Vec2(o.X, o.Y), new Vec2(0f, -Field.ScrollSpeed), RepairAmount);
+                    AddPickup(PickupKind.Repair, new Vec2(o.X * XScale, o.Y), new Vec2(0f, -Field.ScrollSpeed), RepairAmount);
                     continue;
                 }
-                var e = SpawnEnemy(EnemyDefs.Of(o.Kind), new Vec2(o.X, o.Y), counted: true);
+                // Waves are authored for the portrait field: spread them across a wider one. Sweeps enter at the edges.
+                float x = o.Kind == EnemyKind.Gnat && o.Path == GnatPath.SweepRight ? -HalfWidth - 1.5f
+                        : o.Kind == EnemyKind.Gnat && o.Path == GnatPath.SweepLeft ? HalfWidth + 1.5f
+                        : o.X * XScale;
+                var e = SpawnEnemy(EnemyDefs.Of(o.Kind), new Vec2(x, o.Y), counted: true);
+                e.BaseX = x;
                 InitEnemy(e, o);
             }
         }

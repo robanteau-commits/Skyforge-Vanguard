@@ -44,10 +44,10 @@ namespace Skyforge.Simulation
                     if (_rng.Next01() < GnatShotChance) e.ShotAt = _rng.Range(1f, 2.5f);
                     break;
                 case EnemyKind.Needle:
-                    e.Target = new Vec2(o.X, o.Param > 0f ? o.Param : 9f);
+                    e.Target = new Vec2(e.Pos.X, o.Param > 0f ? o.Param : 9f);
                     break;
                 case EnemyKind.Warden:
-                    e.Target = new Vec2(o.X, 10f);
+                    e.Target = new Vec2(e.Pos.X, 10f);
                     e.Param = 0f;
                     break;
                 case EnemyKind.Bastion:
@@ -99,8 +99,8 @@ namespace Skyforge.Simulation
             if (e.Vel.LengthSq > 0.04f) e.Facing = Heading(e.Vel);
         }
 
-        static bool OnScreen(Enemy e) =>
-            e.Pos.X > -Field.HalfWidth && e.Pos.X < Field.HalfWidth && e.Pos.Y > -Field.HalfHeight && e.Pos.Y < Field.HalfHeight;
+        bool OnScreen(Enemy e) =>
+            e.Pos.X > -HalfWidth && e.Pos.X < HalfWidth && e.Pos.Y > -Field.HalfHeight && e.Pos.Y < Field.HalfHeight;
 
         /// <summary>Telegraph for an attack due in <paramref name="timeLeft"/> seconds.</summary>
         static float WindUp(float timeLeft) => timeLeft >= TelegraphTime ? 0f : timeLeft <= 0f ? 1f : 1f - timeLeft / TelegraphTime;
@@ -120,10 +120,10 @@ namespace Skyforge.Simulation
                     p = new Vec2(e.BaseX + 2.6f * Sin(t * 2.2f), e.StartY - 5f * t);
                     break;
                 case GnatPath.SweepRight:
-                    p = new Vec2(-Field.HalfWidth - 1.5f + 6.5f * t, e.StartY - 0.9f * t - 0.12f * t * t);
+                    p = new Vec2(-HalfWidth - 1.5f + 6.5f * XScale * t, e.StartY - 0.9f * t - 0.12f * t * t);
                     break;
                 case GnatPath.SweepLeft:
-                    p = new Vec2(Field.HalfWidth + 1.5f - 6.5f * t, e.StartY - 0.9f * t - 0.12f * t * t);
+                    p = new Vec2(HalfWidth + 1.5f - 6.5f * XScale * t, e.StartY - 0.9f * t - 0.12f * t * t);
                     break;
                 case GnatPath.Swirl:
                     float a = t * 2.4f;

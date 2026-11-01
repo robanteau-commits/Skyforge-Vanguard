@@ -22,7 +22,7 @@ namespace Skyforge.Simulation
             foreach (var e in Enemies)
                 if (e.Kind == EnemyKind.PracticeDrone && !e.Dead) alive++;
             if (alive >= PracticeDroneMax) return;
-            var pos = new Vec2(_rng.Range(-7f, 7f), Field.HalfHeight + 1.5f);
+            var pos = new Vec2(_rng.Range(-7f, 7f) * XScale, Field.HalfHeight + 1.5f);
             var d = SpawnEnemy(EnemyDefs.PracticeDrone, pos, counted: false);
             d.Vel = new Vec2(0f, -_rng.Range(3f, 4.5f));
         }

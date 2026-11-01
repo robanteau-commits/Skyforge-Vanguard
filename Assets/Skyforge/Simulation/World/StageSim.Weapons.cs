@@ -182,11 +182,11 @@ namespace Skyforge.Simulation
                 s.Pos += s.Vel * Field.Dt;
                 if (s.Bounce)
                 {
-                    float edge = Field.HalfWidth - s.Radius;
+                    float edge = HalfWidth - s.Radius;
                     if (s.Pos.X < -edge && s.Vel.X < 0f) s.Vel = new Vec2(-s.Vel.X, s.Vel.Y);
                     else if (s.Pos.X > edge && s.Vel.X > 0f) s.Vel = new Vec2(-s.Vel.X, s.Vel.Y);
                 }
-                if (Field.IsOutside(s.Pos, 1f)) continue;
+                if (Outside(s.Pos, 1f)) continue;
                 if (HitEnemy(ref s)) continue;
                 Shots[write++] = s;
             }

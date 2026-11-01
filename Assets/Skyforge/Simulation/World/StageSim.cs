@@ -13,6 +13,8 @@ namespace Skyforge.Simulation
         public bool? PracticeDrones;
         /// <summary>Speeds up the core's charging (the hangar preview uses it so the core fires often).</summary>
         public float CoreChargeMultiplier = 1f;
+        /// <summary>Play field width: <see cref="Field.Width"/> (portrait, phones) or <see cref="Field.WideWidth"/> (PC, web).</summary>
+        public float FieldWidth = Field.Width;
     }
 
     /// <summary>
@@ -28,6 +30,10 @@ namespace Skyforge.Simulation
         public readonly Loadout Loadout;
         public readonly StageDef Stage;
         public readonly PlayerShip Player = new PlayerShip();
+        /// <summary>Half the play field's width for this stage.</summary>
+        public readonly float HalfWidth;
+        /// <summary>How much wider than the authored portrait field this one is (1 on phones); spawn X is scaled by it.</summary>
+        public readonly float XScale;
         public readonly List<Shot> Shots = new List<Shot>(512);
         public readonly List<EnemyShot> EnemyShots = new List<EnemyShot>(512);
         public readonly List<Enemy> Enemies = new List<Enemy>(64);
@@ -69,6 +75,8 @@ namespace Skyforge.Simulation
             Setup = setup ?? new StageSetup();
             Loadout = Setup.Loadout ?? Loadout.Starter();
             Stage = Setup.Stage;
+            HalfWidth = (Setup.FieldWidth > 0f ? Setup.FieldWidth : Field.Width) * 0.5f;
+            XScale = HalfWidth / Field.HalfWidth;
             _practice = Setup.PracticeDrones ?? Stage == null;
             _rng = new Rng(Setup.Seed);
             Player.Pos = new Vec2(0f, -10f);
@@ -108,9 +116,12 @@ namespace Skyforge.Simulation
             MoveEnemyShots();
             UpdatePickups();
             UpdateCombo();
-            Enemies.RemoveAll(e => e.Dead || Field.IsOutside(e.Pos, 6f));
+            Enemies.RemoveAll(e => e.Dead || Outside(e.Pos, 6f));
             CheckStageEnd();
         }
+
+        /// <summary>Past the edge of this stage's field by more than <paramref name="margin"/>.</summary>
+        bool Outside(Vec2 p, float margin) => Field.IsOutside(p, margin, HalfWidth);
 
         Enemy SpawnEnemy(EnemyDef def, Vec2 pos, bool counted)
         {

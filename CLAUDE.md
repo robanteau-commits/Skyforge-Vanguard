@@ -34,7 +34,9 @@ stages, enemies or art.
   (all 8 wing weapons: projectiles, homing, piercing, bouncing, blasts, the beam, chain lightning),
   Core (charge and the 4 core specials), Enemies (per-kind behaviour, telegraphs, contact), Combat (enemy fire, shield/hull
   damage, pickups), Timeline (spawning, cleared/failed), Practice (target drones).
-  `Field` = the 18 × 32 play field (X right, Y up the screen). `Simulation/Content/` — weapons
+  `Field` = the play field (X right, Y up the screen): 18 × 32 portrait on phones, 24 × 32 on
+  PC/web (`StageSetup.FieldWidth`, `StageSim.HalfWidth`/`XScale`; use those, not the constants,
+  for edges). Stages are authored for 18 wide and spread out. `Simulation/Content/` — weapons
   (`Weapons.cs`), enemy stats (`Enemies.cs`, `EnemyDefs`), stage timelines (`Stages.cs`, written
   with `StageBuilder`: 1-1 First Light and the Armada Sampler test stage).
 - `Game/` — Unity presentation. `GameRunner` boots in any scene, owns the stage and the fixed-step

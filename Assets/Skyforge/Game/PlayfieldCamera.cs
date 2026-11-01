@@ -19,6 +19,14 @@ namespace Skyforge.Game
         const float Margin = 0.4f;
 
         public Camera Cam { get; private set; }
+
+        float _fieldWidth = Field.Width;
+        /// <summary>The play field's width (18 portrait, 24 wide); changing it refits the view.</summary>
+        public float FieldWidth
+        {
+            get => _fieldWidth;
+            set { if (Mathf.Abs(value - _fieldWidth) > 0.01f) { _fieldWidth = value; if (Cam != null) Fit(); } }
+        }
         Camera _backdropClear;
         int _lastW, _lastH;
         Vector3 _basePos;
@@ -82,7 +90,7 @@ namespace Skyforge.Game
             _lastW = Screen.width;
             _lastH = Screen.height;
             float screenAspect = (float)Mathf.Max(1, Screen.width) / Mathf.Max(1, Screen.height);
-            const float target = Field.Width / Field.Height; // 9:16
+            float target = _fieldWidth / Field.Height; // 9:16 portrait, 3:4 wide
             Rect r;
             if (screenAspect > target)
             {
@@ -128,7 +136,7 @@ namespace Skyforge.Game
 
         bool FieldFits()
         {
-            float hw = Field.HalfWidth + Margin, hh = Field.HalfHeight + Margin;
+            float hw = _fieldWidth * 0.5f + Margin, hh = Field.HalfHeight + Margin;
             return Inside(new Vector3(-hw, 0f, -hh)) && Inside(new Vector3(hw, 0f, -hh)) &&
                    Inside(new Vector3(-hw, 0f, hh)) && Inside(new Vector3(hw, 0f, hh));
         }

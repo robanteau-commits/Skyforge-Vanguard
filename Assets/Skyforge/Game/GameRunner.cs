@@ -30,6 +30,12 @@ namespace Skyforge.Game
         /// <summary>The stage to fly; null = practice drones.</summary>
         public StageDef SelectedStage { get; set; } = Stages.FirstLight;
 
+        /// <summary>
+        /// Play field width: wide (3:4) on PC and web, portrait (9:16) on phones and tablets
+        /// (Rob's call, v0.3.2: the portrait strip felt narrow on a monitor).
+        /// </summary>
+        public static float FieldWidth => Application.isMobilePlatform ? Field.Width : Field.WideWidth;
+
         /// <summary>The hangar preview's core charges this many times faster, so you see it fire.</summary>
         const float PreviewCoreCharge = 8f;
 
@@ -76,6 +82,7 @@ namespace Skyforge.Game
                 cam = new GameObject("Main Camera") { tag = "MainCamera" }.AddComponent<Camera>();
             }
             View = PlayfieldCamera.Attach(cam);
+            View.FieldWidth = FieldWidth;
             SetupLighting();
 
             _world = new GameObject("World").transform;
@@ -129,14 +136,14 @@ namespace Skyforge.Game
         public void OpenHangar()
         {
             InHangar = true;
-            Begin(new StageSetup { Seed = 7, Loadout = Loadout, Stage = null, CoreChargeMultiplier = PreviewCoreCharge });
+            Begin(new StageSetup { Seed = 7, Loadout = Loadout, Stage = null, CoreChargeMultiplier = PreviewCoreCharge, FieldWidth = FieldWidth });
         }
 
         /// <summary>Fly the selected stage with the current loadout.</summary>
         public void Launch()
         {
             InHangar = false;
-            Begin(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = Loadout, Stage = SelectedStage });
+            Begin(new StageSetup { Seed = (uint)System.Environment.TickCount | 1u, Loadout = Loadout, Stage = SelectedStage, FieldWidth = FieldWidth });
         }
 
         /// <summary>Fit a weapon to a slot (hangar). Restarts the preview so the change shows at once.</summary>

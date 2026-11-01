@@ -60,7 +60,9 @@ World map ──► pick stage ──► Hangar (fit L wing / R wing / core, buy
 ## 3. The play field and the ship
 
 ### 3.1 Play field
-- Logical field **18 × 32 units** (9:16 portrait). Everything in the simulation uses these units.
+- Logical field **18 × 32 units** (9:16 portrait) on phones and tablets, **24 × 32 (3:4)** on PC
+  and web (Rob's call, v0.3.2: the portrait strip felt narrow on a monitor). Stage waves are
+  authored for 18 wide and spread across the wider field (X scaled, sweeps enter at the edges).
 - **Phone:** the field fills the screen (letterboxed on unusual aspect ratios).
 - **PC / web:** the field sits in the centre, with side panels for score, combo, credits, the hull
   and shield bars and the loadout. The side panels do not block or affect play.

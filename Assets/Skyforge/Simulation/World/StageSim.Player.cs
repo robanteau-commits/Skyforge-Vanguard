@@ -36,9 +36,9 @@ namespace Skyforge.Simulation
             p.Velocity = (p.Pos - before) / Field.Dt;
         }
 
-        public static Vec2 ClampToField(Vec2 pos)
+        public Vec2 ClampToField(Vec2 pos)
         {
-            float minX = -Field.HalfWidth + Field.ShipMarginX, maxX = Field.HalfWidth - Field.ShipMarginX;
+            float minX = -HalfWidth + Field.ShipMarginX, maxX = HalfWidth - Field.ShipMarginX;
             float x = pos.X < minX ? minX : pos.X > maxX ? maxX : pos.X;
             float y = pos.Y < Field.ShipMinY ? Field.ShipMinY : pos.Y > Field.ShipMaxY ? Field.ShipMaxY : pos.Y;
             return new Vec2(x, y);

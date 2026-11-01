@@ -6,7 +6,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - **Design:** [docs/DESIGN.md](docs/DESIGN.md) (approved)
 - **Models:** made in Blender, see [docs/BLENDER.md](docs/BLENDER.md)
 - **Engine:** Unity 6000.6.4f1, Universal Render Pipeline, Input System
-- **Status:** milestone M2, weapons and the hangar (v0.3.1)
+- **Status:** milestone M2, weapons and the hangar (v0.3.2)
 
 ## Opening the project
 1. Get the latest files: in Command Prompt, `cd /d D:\Games\SkyforgeVanguard` then `git pull`.
@@ -40,7 +40,8 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 - Controls: the ship follows the mouse; WASD / arrows; gamepad stick; touch drag. Shift / right
   mouse / LT = precision (half speed). Esc / P = pause.
 - Keys: **H** hangar, **R** restart, **6 / 7 / 8** fly stage 1-1 / Armada Sampler / practice.
-- Portrait 9:16 play field; on wide screens the score and controls sit in side panels.
+- Play field: 3:4 on PC and web (24 × 32), 9:16 portrait on phones; the score and controls sit
+  in side panels beside it.
 
 ## Milestones (docs/DESIGN.md §12)
 | # | Milestone | Status |
