@@ -213,7 +213,7 @@ namespace Skyforge.Simulation
                     bool wasCleared = rec.Cleared;
                     rec.Cleared = true;
                     res.Ace = sim.Score >= AceScore(stage, vet);
-                    res.Untouched = sim.HullDamageTaken <= 0f;
+                    res.Untouched = sim.HitsTaken == 0;
                     res.Purge = sim.KillPercent >= Simulation.Stages.PurgePercent;
                     if (res.Ace && !rec.Ace) { rec.Ace = res.NewAce = true; res.MedalBonus += stage.MedalBonus[0]; }
                     if (res.Untouched && !rec.Untouched) { rec.Untouched = res.NewUntouched = true; res.MedalBonus += stage.MedalBonus[1]; }

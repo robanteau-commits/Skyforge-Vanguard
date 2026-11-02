@@ -64,8 +64,10 @@ namespace Skyforge.Simulation
         public int Spawned { get; private set; }
         /// <summary>Credits collected this stage.</summary>
         public int Credits { get; private set; }
-        /// <summary>Total hull damage taken (the Untouched medal needs 0).</summary>
+        /// <summary>Total hull damage taken.</summary>
         public float HullDamageTaken { get; private set; }
+        /// <summary>Hits that landed on the shield or hull; Aegis blocks don't count (the Untouched medal needs 0).</summary>
+        public int HitsTaken { get; private set; }
 
         /// <summary>Score multiplier in tenths (10 = ×1.0 … 50 = ×5.0), kept as an integer so it never drifts.</summary>
         public int ComboTenths { get; private set; } = 10;
@@ -224,7 +226,7 @@ namespace Skyforge.Simulation
         {
             var h = new Hasher();
             h.Add(Tick); h.Add(Score); h.Add(Kills); h.Add(CountedKills); h.Add(Veteran ? 1 : 0); h.Add(Spawned); h.Add(Credits); h.Add(ComboTenths); h.Add(_comboIdle);
-            h.Add(HullDamageTaken); h.Add((int)Status); h.Add(_rng.State); h.Add(_nextEnemyId); h.Add(_nextPickupId);
+            h.Add(HullDamageTaken); h.Add(HitsTaken); h.Add((int)Status); h.Add(_rng.State); h.Add(_nextEnemyId); h.Add(_nextPickupId);
             h.Add(_nextOrder); h.Add(_droneTimer);
             var p = Player;
             h.Add(p.Pos); h.Add(p.LeftCooldown); h.Add(p.RightCooldown); h.Add(p.Alive ? 1 : 0);

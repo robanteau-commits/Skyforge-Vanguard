@@ -79,7 +79,7 @@ Vanguard, fit a weapon to each wing and the core, and fight off the Veil Armada.
 
 ## What's in M1 — the first stage
 - **Stage 1-1 "First Light"** (about 2½ minutes): waves of Gnats and Needles, closed by the first
-  Warden gunship. It ends in a results screen (score, kill %, hull damage, credits).
+  Warden gunship. It ends in a results screen (score, kill %, hits taken, credits).
 - **The Veil Armada:** Gnats (formations), Needles (hover, aimed burst, dive), Ram Drones (lock on
   and charge), Spine Mines (burst into a ring), Wardens (rotating rings and aimed fans) and
   Bastion turrets on drifting asteroids. Every attack is telegraphed by a red glow.

@@ -46,6 +46,7 @@ namespace Skyforge.Simulation.Tests
             Assert.AreEqual(30f, sim.Player.Shield, 0.01f);
             Assert.AreEqual(100f, sim.Player.Hull, 0.01f);
             Assert.AreEqual(0f, sim.HullDamageTaken);
+            Assert.AreEqual(1, sim.HitsTaken, "a shield hit still counts as a hit");
             Assert.AreEqual(0, sim.EnemyShots.Count, "the bullet is used up");
         }
 

@@ -224,7 +224,7 @@ namespace Skyforge.Game
             float mh = (compact ? 44f : 62f) * s, gap = 10f * s;
             MedalRow(new Rect(r.x, y, r.width, mh), s, "Ace", "Score " + Progress.AceScore(st.Def, _runner.Veteran).ToString("N0"), rec?.Ace ?? false, st.Def.MedalBonus[0], compact);
             y += mh + gap;
-            MedalRow(new Rect(r.x, y, r.width, mh), s, "Untouched", "Clear with no hull damage", rec?.Untouched ?? false, st.Def.MedalBonus[1], compact);
+            MedalRow(new Rect(r.x, y, r.width, mh), s, "Untouched", "Clear without being hit", rec?.Untouched ?? false, st.Def.MedalBonus[1], compact);
             y += mh + gap;
             MedalRow(new Rect(r.x, y, r.width, mh), s, "Purge", "Destroy " + Stages.PurgePercent + "% of enemies", rec?.Purge ?? false, st.Def.MedalBonus[2], compact);
 

@@ -123,6 +123,7 @@ namespace Skyforge.Simulation
             }
             if (p.Invulnerable > 0f) return false;
             p.Invulnerable = PlayerShip.HitInvulnerability;
+            HitsTaken++;
             p.ShieldRegenWait = p.ShieldRegenDelay;
             float absorbed = Math.Min(p.Shield, damage);
             if (absorbed > 0f)

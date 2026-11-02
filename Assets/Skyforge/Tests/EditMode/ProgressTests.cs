@@ -140,6 +140,20 @@ namespace Skyforge.Simulation.Tests
         }
 
         [Test]
+        public void AShieldHitLosesUntouched()
+        {
+            var stage = Tiny(ace: 1);
+            var sim = new StageSim(new StageSetup { Stage = stage, Loadout = new Loadout { LeftWing = new Fitted(Weapons.PulseRepeater, 5), RightWing = new Fitted(Weapons.PulseRepeater, 5) } });
+            sim.EnemyShots.Add(new EnemyShot { Pos = sim.Player.Pos, Radius = 0.3f, Damage = 5f });
+            for (int i = 0; i < Field.StepsPerSecond * 30 && sim.Status == StageStatus.Playing; i++) sim.Step(PlayerInput.Idle);
+            Assert.AreEqual(StageStatus.Cleared, sim.Status);
+            Assert.AreEqual(0f, sim.HullDamageTaken, "the shield took it all");
+            var r = Progress.NewGame().RecordStage(stage, sim);
+            Assert.IsFalse(r.Untouched);
+            Assert.IsTrue(r.Ace && r.Purge);
+        }
+
+        [Test]
         public void FailingBanksHalfTheCreditsAndNoMedals()
         {
             var stage = Tiny(ace: 1);

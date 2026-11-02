@@ -262,7 +262,8 @@ and easy for me to write and balance.
   the results screen.
 - **Medals (3 per stage, per difficulty):**
   1. **Ace:** reach the stage's score threshold.
-  2. **Untouched:** finish without any **hull** damage (shield damage allowed).
+  2. **Untouched:** finish without being hit at all: a shield hit loses it too (changed in v0.8.1;
+     hits the Aegis bubble blocks don't count). The results screen shows hits taken.
   3. **Purge:** destroy ≥ 90% of the stage's enemies.
 - Each medal pays a **one-time credit bonus** (stage-dependent, ~150–400) the first time it's earned.
   Medal totals show on the world map. Medals pay credits only for now (decided in M3);

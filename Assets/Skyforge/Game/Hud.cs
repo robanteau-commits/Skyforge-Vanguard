@@ -264,7 +264,7 @@ namespace Skyforge.Game
 
             ResultRow(ref y, inner, s, "Score", sim.Score.ToString("N0"), Palette.HudText);
             ResultRow(ref y, inner, s, "Enemies destroyed", sim.Spawned > 0 ? sim.KillPercent + "%" : sim.Kills.ToString(), Palette.HudText);
-            ResultRow(ref y, inner, s, "Hull damage", sim.HullDamageTaken <= 0f ? "NONE" : Mathf.CeilToInt(sim.HullDamageTaken).ToString(), Palette.HudText);
+            ResultRow(ref y, inner, s, "Hits taken", sim.HitsTaken == 0 ? "NONE" : sim.HitsTaken.ToString(), Palette.HudText);
             ResultRow(ref y, inner, s, cleared ? "Credits banked" : "Credits kept (half)", sim.CreditsBanked.ToString("N0"), Palette.HudGold);
             if (res != null) ResultRow(ref y, inner, s, "Total credits", res.TotalCredits.ToString("N0"), Palette.HudGold);
             y += 10f * s;
@@ -273,7 +273,7 @@ namespace Skyforge.Game
             {
                 float gap = 12f * s, mw = (inner.width - gap * 2f) / 3f, mh = 96f * s;
                 MedalTile(new Rect(inner.x, y, mw, mh), s, "Ace", res.Ace, res.NewAce, sim.Stage.MedalBonus[0], "Score " + Progress.AceScore(sim.Stage, sim.Veteran).ToString("N0"));
-                MedalTile(new Rect(inner.x + mw + gap, y, mw, mh), s, "Untouched", res.Untouched, res.NewUntouched, sim.Stage.MedalBonus[1], "No hull damage");
+                MedalTile(new Rect(inner.x + mw + gap, y, mw, mh), s, "Untouched", res.Untouched, res.NewUntouched, sim.Stage.MedalBonus[1], "No hits taken");
                 MedalTile(new Rect(inner.x + (mw + gap) * 2f, y, mw, mh), s, "Purge", res.Purge, res.NewPurge, sim.Stage.MedalBonus[2], Stages.PurgePercent + "% needed");
                 y += mh + 16f * s;
             }
